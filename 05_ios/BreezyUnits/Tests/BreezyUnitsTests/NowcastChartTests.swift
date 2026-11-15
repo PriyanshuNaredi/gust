@@ -78,6 +78,35 @@ struct NowcastChartTests {
         #expect(dry.summary(zone: berlin, locale: english) == "No precipitation")
     }
 
+    @Test("a dry window under a rainy sky says so")
+    func dryWindowUnderRainySky() {
+        let dry = nowcast([nil, nil, nil, nil])
+        // Upstream's own string, unchanged, when the observation agrees.
+        #expect(dry.summary(zone: berlin, locale: english) == "No precipitation")
+        // The observation says "slight rain" but every measured field is 0.0 mm: the
+        // card must not leave the user asking whether it is raining or not.
+        #expect(dry.summary(zone: berlin, locale: english, currentIsWet: true)
+            == "No precipitation expected in the next 2 hours")
+        // A wet window keeps upstream's sentence whatever the observation says.
+        let wet = nowcast([nil, 2, 2, nil])
+        #expect(wet.summary(zone: berlin, locale: english, currentIsWet: true)
+            == "Expected to start at 14:15")
+    }
+
+    @Test("the observation is wet exactly for the precipitation families")
+    func wetObservation() {
+        func weather(_ code: WeatherCode?) -> Weather {
+            Weather(current: CurrentObservation(date: start, weatherCode: code),
+                    hourlyForecast: [], dailyForecast: [], minutelyForecast: [], refreshTime: start)
+        }
+        #expect(weather(.rain).currentIsWet)
+        #expect(weather(.snow).currentIsWet)
+        #expect(weather(.thunderstorm).currentIsWet)
+        #expect(!weather(.cloudy).currentIsWet)
+        #expect(!weather(.clear).currentIsWet)
+        #expect(!weather(nil).currentIsWet)
+    }
+
     @Test("starting, continuing and stopping read differently")
     func copy() {
         let starting = nowcast([nil, 2, 2, nil])

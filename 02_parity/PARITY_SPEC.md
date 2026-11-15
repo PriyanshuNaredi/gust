@@ -309,3 +309,25 @@ The rule worth copying: **when one card reads two different splits of the same d
 both of them.** Collapsing them to one makes the card disagree with the original for two
 hours a day, and only for two hours a day, which is the kind of difference a screenshot
 comparison taken at noon will never show.
+
+## When the source's own fields disagree
+
+Berlin, 18:00 local: Open-Meteo returned `weather_code 61` ("slight rain") with
+`precipitation: 0.0`, `rain: 0.0`, `showers: 0.0` — in `current`, in every hourly entry
+until 19:00, and in all eight 15-minute steps covering the next two hours. So the screen
+painted its rain backdrop (the code says rain) over a nowcast that counted zero
+millimetres, and read as a contradiction.
+
+Upstream cannot produce this: one provider fills both the code and the minutely series, so
+the two always agree. Here they are two different questions with two different answers:
+
+- **the look** follows the weather-code family (`WeatherViewController`), the way upstream's does;
+- **the numbers** follow measured millimetres.
+
+| # | Deviation | Reason |
+|---|---|---|
+| 30 | When the observation is a precipitation family and the charted window is dry, the card says "No precipitation expected in the next 2 hours" instead of upstream's "No precipitation" | Upstream has no string for a case upstream cannot reach. Saying "No precipitation" under a rainy header leaves the user unable to tell whether it is raining |
+
+`Weather.currentIsWet` is the flag: the current weather code's family is one of
+rain, snow, sleet, hail, thunder, thunderstorm. It never invents data — it only changes
+one sentence, and only when the chart holds nothing.

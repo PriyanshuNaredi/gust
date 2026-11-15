@@ -205,6 +205,17 @@ public struct Weather: Hashable, Sendable {
         self.refreshTime = refreshTime
     }
 
+    /// Whether the *observation* describes precipitation, by weather-code family.
+    ///
+    /// This exists because the sky and the gauge can disagree: Open-Meteo sent
+    /// `weather_code 61` ("slight rain") with 0.0 mm in every measured field for the
+    /// whole evening. The backdrop follows the code (as upstream's does) while the
+    /// nowcast counts millimetres, so the card has to be able to explain itself.
+    public var currentIsWet: Bool {
+        guard let code = current?.weatherCode else { return false }
+        return [.rain, .snow, .sleet, .hail, .thunder, .thunderstorm].contains(code)
+    }
+
     /// Air quality for the hour nearest `date`, within the hour. Upstream looks up
     /// the exact timestamp; a nearest-hour lookup is kinder to a slightly offset
     /// clock and is what the cards need.

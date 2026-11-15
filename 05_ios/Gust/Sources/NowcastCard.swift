@@ -19,13 +19,17 @@ struct NowcastCard: View {
     /// Upstream picks the bar colour with `WeatherViewController.isDaylight(location)`,
     /// i.e. the weather's own daylight, not the phone's clock or the theme.
     let daylight: Bool
+    /// Whether the observation itself is precipitation: the weather code's family, or a
+    /// current precipitation above zero. Used only to explain a dry chart under a rainy
+    /// header (see `Nowcast.noPrecipitationAhead`).
+    let currentIsWet: Bool
 
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         CardShell(title: nowcast.title, icon: "umbrella") {
             VStack(alignment: .leading, spacing: 6) {
-                Text(nowcast.summary(zone: zone))
+                Text(nowcast.summary(zone: zone, currentIsWet: currentIsWet))
                     .font(.system(size: 14))
                     .foregroundStyle(BreezyTheme.onSurfaceVariant(scheme))
                     .fixedSize(horizontal: false, vertical: true)

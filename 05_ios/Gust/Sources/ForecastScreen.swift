@@ -260,7 +260,8 @@ struct ForecastScreen: View {
             NowcastCard(
                 nowcast: Nowcast(steps: weather.minutelyForecast).relative(to: Date()),
                 zone: weather.timeZone,
-                daylight: weather.isDaylight()
+                daylight: weather.isDaylight(),
+                currentIsWet: weather.currentIsWet
             )
         case .precipitation: PrecipitationCard(weather: weather, units: appState.units)
         case .hourly: HourlyCard(weather: weather, units: appState.units)

@@ -145,7 +145,10 @@ extension Nowcast {
 
     /// `getMinutelyDescription`: when it starts, how long it lasts, when it stops. The
     /// wet spell's *end* is the last wet step plus one step, not the last step's start.
-    public func summary(zone: TimeZone, locale: Locale = .current) -> String {
+    /// `currentIsWet` is the observation's own verdict: the weather code is a
+    /// precipitation family, or the current precipitation is above zero. It only
+    /// changes the copy when the charted window is dry.
+    public func summary(zone: TimeZone, locale: Locale = .current, currentIsWet: Bool = false) -> String {
         switch state {
         case .starting:
             guard let start = firstWetDate else { return Self.noPrecipitation }
@@ -157,11 +160,22 @@ extension Nowcast {
             guard let end = wetSpellEnd else { return Self.noPrecipitation }
             return "Expected to stop at " + Self.time(end, zone: zone, locale: locale)
         case .none:
-            return Self.noPrecipitation
+            return currentIsWet ? Self.noPrecipitationAhead : Self.noPrecipitation
         }
     }
 
     public static let noPrecipitation = "No precipitation"
+
+    /// The window is dry but the *current condition* says it is raining.
+    ///
+    /// A source can describe the sky and meter it separately, and they disagree: Berlin
+    /// at 18:00 was `weather_code 61` ("slight rain") with 0.0 mm in every measured
+    /// field, now and for the next hours. Upstream cannot hit this — one provider fills
+    /// both the code and the minutely series — so it has no string for it, and the card
+    /// read "No precipitation" under a rainy-looking header with no explanation.
+    ///
+    /// DEVIATION 30: one extra sentence, used only in that case.
+    public static let noPrecipitationAhead = "No precipitation expected in the next 2 hours"
 
     /// The last wet step's end: its start plus one step interval.
     public var wetSpellEnd: Date? {

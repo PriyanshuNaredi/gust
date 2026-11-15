@@ -25,6 +25,7 @@ subset and `02_parity/PARITY_SPEC.md` for what exactly.
 | 9 | Settings | **done**: upstream's structure — background updates, appearance, main screen, location, sources, debug, licences | UI tests green |
 | 10 | Release | **done**: unsigned IPA + CI workflow | `ipa-build.sh` verifies bundle, version keys, licences, platform |
 | 6b | UI parity pass | **done**: weather backdrop, upstream header, trend tabs, AQ ring, wind arrow, pollen levels, day/night precipitation, detail date selector | screenshots in `07_logs/shots/` |
+| 6g | Dry window under a rainy sky | **done**: `Weather.currentIsWet`, and one extra sentence when the code says rain and every measured field says 0.0 mm (the case upstream cannot reach) | 2 tests; deviation 30 |
 | 6f | Precipitation block | **done**: the shown half decided at 05:00/17:00, the summed half at 06:00/18:00, label from rain/snow vs total; the 03:00 window no longer points at a night still to come | `PrecipitationSummary.swift` + 8 tests |
 | 6e | Precipitation nowcast | **done**: five-minute buckets, three-tick axis, threshold lines with the stand-down law, upstream's title/description pair, rain-theme bar colour; the series is clipped to the charted span so the sentence cannot describe a different two hours | `BreezyUnits/NowcastChart.swift` + 11 tests; `Gust/NowcastCard.swift` |
 | 6d | Weather background | **done**: upstream's three-stop gradient assets (day/night/theme) plus the geometric scene — sun, cloud circles, 75/45 rain streaks, 50 flakes, 51 hail, 160 wind gusts, 50/70 stars, 10 meteors, thunder flash — at 20 fps, with an "Animated background" setting | `05_ios/BreezyUnits/.../WeatherScene.swift` + 7 tests; idle CPU ~5.5% |
@@ -111,7 +112,7 @@ first, minutely-when-absent behaviour.
 | Locations / search | complete for one provider |
 | Settings | complete for what iOS can honour; notifications and widgets out (deviation 22) |
 | Release | unsigned IPA verified by `ipa-build.sh`; CI present, unpushed |
-| Tests | 121 package + 10 UI, all green |
+| Tests | 123 package + 10 UI, all green |
 
 ### Known gaps, all deliberate
 
