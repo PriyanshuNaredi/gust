@@ -17,7 +17,7 @@ subset and `02_parity/PARITY_SPEC.md` for what exactly.
 | 1 | Recon | **done** | `recon/RECON.md` + 9 files |
 | 2 | Source recovery | **done** | upstream at tag `v6.2.2` + `recon/` for the binary's own facts |
 | 3 | Parity spec | **signed off** (Option A + defaults) | `02_parity/PARITY_SPEC.md` |
-| 4 | Scaffolding | **started** — units package builds and tests green | `05_ios/BreezyUnits/` |
+| 4 | Scaffolding | **done** — app builds, installs, launches, links the package; UI gate green | `05_ios/Gust/`, `07_logs/shots/shell-launch.png` |
 | 5 | Data layer | **slices 1–2 done**: units module complete except `Duration` | 20 tests, 0 failures |
 | 6 | UI port | not started | — |
 | 7 | Custom rendering (charts) | not started | — |
@@ -35,6 +35,12 @@ minutely hidden when the source has no data.
 |---|---|---|
 | 1 | `BreezyUnits`: reference-unit storage, Temperature (4 units), Precipitation (5 units), `computeTotalPrecipitation`, `snowToLiquidRatio`, `computeHumidex` | `swift test` → 10 passed, assertions lifted from upstream's own `weather-unit` tests |
 | 2 | Speed (7 units incl. Beaufort boundaries), Distance (5), Pressure (7), Ratio (3), `computeApparentTemperature`, `computeWindChillTemperature`, `computeTotalProbabilityOfPrecipitation` | `swift test` → 20 passed |
+| 3 | App shell `Gust` (XcodeGen), links `BreezyUnits`, renders ported values, 2 UI tests | `./07_tools/macos-tests.sh all` → logic 20 + ui 2, 0 failures; screenshot `07_logs/shots/shell-launch.png` |
+
+Shell values are not placeholders: humidex 31.0 °C at 25 °C / 18 °C dew point, apparent 24.1 °C,
+pressure 1013.25 hPa, and wind chill correctly absent above 10 °C. Two XcodeGen traps found and
+fixed: `CFBundleVersion` missing (build succeeded, install refused with code 22) and a stale
+project silently excluding new files.
 
 `Duration` is deferred: upstream's is 322 lines of humanised multi-unit output ("2 h 15 min") built
 on Android's `MeasureUnit`, so it belongs with the formatting layer, not the arithmetic.
