@@ -18,7 +18,8 @@ subset and `02_parity/PARITY_SPEC.md` for what exactly.
 | 2 | Source recovery | **done** | upstream at tag `v6.2.2` + `recon/` for the binary's own facts |
 | 3 | Parity spec | **signed off** (Option A + defaults) | `02_parity/PARITY_SPEC.md` |
 | 4 | Scaffolding | **done** — app builds, installs, launches, links the package; UI gate green | `05_ios/Gust/`, `07_logs/shots/shell-launch.png` |
-| 5 | Data layer | **slices 1–4 done**: units, Open-Meteo request/response/mapping/client | 27 tests, 0 failures |
+| 5 | Data layer | **done**: units, Open-Meteo request/response/mapping/client, hourly/daily/minutely models | 40 logic tests, 0 failures |
+| 6 | Main screen | **started**: card stack with the ported half/full rule; header, hourly, daily, 6 half cards | 5 UI tests, 0 failures |
 | 6 | UI port | not started | — |
 | 7 | Custom rendering (charts) | not started | — |
 | 8 | Verification | not started | — |
@@ -48,12 +49,27 @@ project silently excluding new files.
 `Duration` is deferred: upstream's is 322 lines of humanised multi-unit output ("2 h 15 min") built
 on Android's `MeasureUnit`, so it belongs with the formatting layer, not the arithmetic.
 
+## Parity rules ported in the card-stack slice
+
+| Rule | Upstream source | Why a plausible port gets it wrong |
+|---|---|---|
+| Daily list drops the last day (`0 until size - 1`) | `OpenMeteoService.getDailyList` | The payload has 17 days; rendering 17 shows one more day than Android. My own test asserted 17 and had to change. |
+| Daily date = add 1 h, then zero the hour | same | A naive `startOfDay` lands on the wrong day across a DST boundary. |
+| `rain` = rain + showers | same | Keeping them apart renders a rain card that looks dry during a shower. |
+| `snowfall` is centimetres, everything else millimetres | response `*_units` | Silent 10× error in snow depth. |
+| Nowcast keeps one entry per step, nullable | `Minutely.precipitationIntensity` | `compactMap` slid the series 19 steps earlier (1632 → 1613). |
+| WMO 4, 50 and anything unmapped → no icon | `getWeatherCode` | Inventing a family for an unknown code shows the wrong weather. |
+| Half cards pair two per row; full cards own a row | `ViewType.isHalfSizeableBlock` | `LazyVGrid` stretches rows level; upstream rows are ragged. |
+
 ## Bugs found in my own tooling (worth keeping)
 
 | Bug | Symptom | Fix |
 |---|---|---|
 | build script piped `xcodebuild` into `grep` | `BUILD FAILED` still printed `OK` and installed the **previous** app; the screenshot showed the old shell | capture the log, branch on exit status, then grep for humans |
 | `simctl launch` on a running app | pid unchanged, screenshot showed stale UI twice in a row | terminate + uninstall + install + launch when verifying a new build |
+| `grep … && { exit 1; }` under `set -e` | tests passed silently with no output at all | use `if grep …; then` |
+| `out=$(failing cmd)` under `set -e` | failing UI run printed nothing, exit 65 only | capture `rc=$?` explicitly, then report |
+| container `.accessibilityIdentifier` | UI test waited 30 s for a label that existed, because every descendant had been renamed | `.accessibilityElement(children: .contain)` first; when a query fails, dump `app.debugDescription` before editing assertions |
 
 ## Open decisions
 
