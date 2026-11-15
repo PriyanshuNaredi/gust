@@ -18,7 +18,7 @@ subset and `02_parity/PARITY_SPEC.md` for what exactly.
 | 2 | Source recovery | **done** | upstream at tag `v6.2.2` + `recon/` for the binary's own facts |
 | 3 | Parity spec | **signed off** (Option A + defaults) | `02_parity/PARITY_SPEC.md` |
 | 4 | Scaffolding | **started** — units package builds and tests green | `05_ios/BreezyUnits/` |
-| 5 | Data layer | **slice 1 done**: Temperature, Precipitation, humidex, snow ratio | 10 tests, 0 failures |
+| 5 | Data layer | **slices 1–2 done**: units module complete except `Duration` | 20 tests, 0 failures |
 | 6 | UI port | not started | — |
 | 7 | Custom rendering (charts) | not started | — |
 | 8 | Verification | not started | — |
@@ -34,6 +34,10 @@ minutely hidden when the source has no data.
 | Slice | What | Proof |
 |---|---|---|
 | 1 | `BreezyUnits`: reference-unit storage, Temperature (4 units), Precipitation (5 units), `computeTotalPrecipitation`, `snowToLiquidRatio`, `computeHumidex` | `swift test` → 10 passed, assertions lifted from upstream's own `weather-unit` tests |
+| 2 | Speed (7 units incl. Beaufort boundaries), Distance (5), Pressure (7), Ratio (3), `computeApparentTemperature`, `computeWindChillTemperature`, `computeTotalProbabilityOfPrecipitation` | `swift test` → 20 passed |
+
+`Duration` is deferred: upstream's is 322 lines of humanised multi-unit output ("2 h 15 min") built
+on Android's `MeasureUnit`, so it belongs with the formatting layer, not the arithmetic.
 
 ## Open decisions
 
