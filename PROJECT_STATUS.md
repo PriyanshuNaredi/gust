@@ -18,7 +18,7 @@ subset and `02_parity/PARITY_SPEC.md` for what exactly.
 | 2 | Source recovery | **done** | upstream at tag `v6.2.2` + `recon/` for the binary's own facts |
 | 3 | Parity spec | **signed off** (Option A + defaults) | `02_parity/PARITY_SPEC.md` |
 | 4 | Scaffolding | **done** — app builds, installs, launches, links the package; UI gate green | `05_ios/Gust/`, `07_logs/shots/shell-launch.png` |
-| 5 | Data layer | **done**: units, Open-Meteo forecast + air quality + geocoding, hourly/daily/minutely/pollen models | 96 logic tests, 0 failures |
+| 5 | Data layer | **done**: units, Open-Meteo forecast + air quality + geocoding, hourly/daily/minutely/pollen models | 99 logic tests, 0 failures |
 | 6 | Main screen | **done**: header, nowcast, daily, hourly, 10 half/full cards, footer | UI tests green |
 | 7 | Detail pages | **done**: hourly, daily, per-metric series, air quality (Canvas) | UI tests green |
 | 8 | Locations + search | **done**: saved places, geocoding search, persistence | 10 UI tests green |
@@ -108,7 +108,7 @@ first, minutely-when-absent behaviour.
 | Locations / search | complete for one provider |
 | Settings | complete for what iOS can honour; notifications and widgets out (deviation 22) |
 | Release | unsigned IPA verified by `ipa-build.sh`; CI present, unpushed |
-| Tests | 96 package + 10 UI, all green |
+| Tests | 99 package + 10 UI, all green |
 
 ### Known gaps, all deliberate
 

@@ -14,8 +14,9 @@ ships under its own name, its own icon, and ships LGPL-3.0 with the upstream not
 | Scope | Option A — see `SCOPE.md` |
 | Weather source | Open-Meteo (forecast + air quality + geocoding) |
 | Platform | iOS 17+, Swift 6 toolchain, Swift 5 language mode |
-| Tests | 96 package + 10 UI, all green |
-| Licence | LGPL-3.0, plus upstream's additional terms |
+| Tests | 99 package + 10 UI, all green |
+| Licence | LGPL-3.0, plus upstream's additional terms — see `LICENSE`, `LICENSE_ADDITIONAL` |
+| Status | Feature-complete for its scope, not a finished product — `PROJECT_STATUS.md` lists exactly what is and is not done |
 
 ## What it does
 
@@ -32,6 +33,14 @@ ships under its own name, its own icon, and ships LGPL-3.0 with the upstream not
   removal, persisted between launches.
 - **Settings** — temperature, wind, pressure, precipitation and distance units, all
   wired to live formatting; licence and notice texts in-app.
+
+There is no bottom tab bar, because upstream has none: the place list is behind the
+top-left button and settings sit behind the overflow menu.
+
+![Main screen](02_parity/screenshots/main-top.png)
+![Lower cards](02_parity/screenshots/main-lower.png)
+
+*(Simulator captures, iOS 18, Berlin, live Open-Meteo data.)*
 
 ## Build
 
@@ -57,27 +66,58 @@ repository, `apk-to-ipa-playbook`. The short version:
 4. Port the UI only after the data layer can be tested in milliseconds.
 5. Verify with screenshots and measured layout, not with "it looks right".
 
-## Deviations from upstream
+## What is not here
 
-Recorded in `02_parity/PARITY_SPEC.md`; the ones a user can see:
+Recorded as deviations in `02_parity/PARITY_SPEC.md`, with a reason for each:
 
-- Main screen shows a subset of upstream's 15 cards (no alerts, pollen or clock-only
-  views — see `SCOPE.md` for the reason each one is out).
-- Sun times come from Open-Meteo's own `sunrise`/`sunset` variables, which upstream never
-  requests, so Breezy's sun card is empty when the source is Open-Meteo.
-- Moon phase is computed locally; there is no moonrise/moonset.
-- The nowcast strip charts three hours, not upstream's entire minutely series.
-- The precipitation card shows one daily total rather than upstream's day/night split.
+- **No alerts card.** No source in this port sends weather alerts, so the card is absent
+  rather than permanently empty. The model and the notification rules are specified in
+  `02_parity/PARITY_SPEC.md` for the provider that would restore it.
+- **One weather source.** Open-Meteo only. Upstream ships 74 integrations; adding one here
+  is a `WeatherProvider` conformance, not a refactor.
+- **English only.** Upstream has 1,162 strings across 63 locales.
+- **No widgets, live wallpaper, Wear OS, or map layers.** There is no iOS counterpart for
+  the wallpaper or the tiles, and widgets would be a redesign rather than a transcription.
+- **Untested on physical hardware.** No Apple ID or signing identity is used anywhere in
+  this project; everything is simulator and host logic.
+- **The app bar is a material blur, not the weather colour.** SwiftUI ignores a
+  `toolbarBackground` colour that is derived from data loaded after the bar is built, and
+  `toolbarBackgroundVisibility` is iOS 18+ while the deployment target is 17.
+- **No degree days or deviation-from-normal.** Both need a 30-year climatology; a made-up
+  baseline would be worse than its absence.
 
 ## Layout
 
 ```
-02_parity/    screen inventory, card catalog, deviation ledger
-03_.../       (scope and analysis notes)
+SCOPE.md        what was cut and why
+PROJECT_STATUS.md  stage-by-stage state, including what is unfinished
+02_parity/      screen inventory, card catalog, deviation ledger, screenshots
+recon/          facts extracted from the APK itself (checksum, strings, resources)
 05_ios/
   BreezyUnits/  portable logic: units, Open-Meteo, AQI, nowcast, layout, preferences
-  Gust/         the app: screens, cards, stores
-06_release/     unsigned IPA output
+  Gust/         the app: screens, cards, stores, the ported weather artwork
+06_release/     unsigned IPA output (generated, not tracked)
 07_tools/       build, test and packaging scripts
-07_logs/        screenshots and build logs (not tracked)
+07_logs/        local build logs and screenshots (not tracked)
 ```
+
+## Credits
+
+Full attributions are in [`CREDITS.md`](CREDITS.md), and in-app under Settings → Licences.
+In short:
+
+- **Breezy Weather 6.2.2**, © the Breezy Weather contributors, LGPL-3.0 — the app this is
+  a port of. Its source at tag `v6.2.2` is the specification; the port was written by
+  reading it.
+- **The weather artwork** is upstream's own (`app/src/main/res/drawable/weather_*.png`),
+  redistributed under the same licence, unmodified. Only the *lookup* that picks an image
+  for a condition was rewritten.
+- **Open-Meteo** (<https://open-meteo.com>) provides forecast, air-quality and geocoding
+  data under CC BY 4.0; the air-quality variables come from the Copernicus Atmosphere
+  Monitoring Service. Attribution is shown on the main screen and in Settings, not just
+  here.
+- **The port** — app code, icon and packaging — is by Priyanshu Naredi.
+
+Upstream's `LICENSE_ADDITIONAL` forbids suggesting that a modified version *is* the
+original, and grants no trademark rights. Hence: a different name, a different icon, and
+this notice.
