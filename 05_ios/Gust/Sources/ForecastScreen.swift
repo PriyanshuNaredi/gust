@@ -29,6 +29,13 @@ struct ForecastScreen: View {
         .sun, .moon, .clock, .footer
     ]
 
+    /// What the user chose to see. Header and footer are never hideable.
+    private var visibleCards: [MainCardKind] {
+        cards.filter { kind in
+            kind == .header || kind == .footer || !appState.hiddenCards.contains(kind.rawValue)
+        }
+    }
+
     /// Black on the pale day colours, white on the darkened night ones -- the same
     /// rule the header text uses.
     private var toolbarForeground: Color {
@@ -71,7 +78,7 @@ struct ForecastScreen: View {
                     }
                     .accessibilityIdentifier("forecast.error")
                 case .loaded(let weather):
-                    ForEach(Array(CardLayout.rows(for: cards).enumerated()), id: \.offset) { _, row in
+                    ForEach(Array(CardLayout.rows(for: visibleCards).enumerated()), id: \.offset) { _, row in
                         rowView(row, weather: weather)
                     }
                 }
@@ -92,6 +99,16 @@ struct ForecastScreen: View {
         .refreshable {
             store.place = appState.selectedPlace
             await store.reload()
+        }
+        .task(id: appState.refreshMinutes) {
+            // Foreground refresh loop. iOS will suspend the timer when the app is
+            // backgrounded, which is exactly the behaviour the settings screen says.
+            guard appState.refreshMinutes > 0 else { return }
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(appState.refreshMinutes * 60))
+                guard !Task.isCancelled else { return }
+                await store.reload()
+            }
         }
         .accessibilityIdentifier("forecast.screen")
         }
@@ -192,9 +209,9 @@ struct ForecastScreen: View {
         case .precipitation: PrecipitationCard(weather: weather, units: appState.units)
         case .hourly: HourlyCard(weather: weather, units: appState.units)
         case .daily: DailyCard(weather: weather, units: appState.units)
-        case .airQuality: MetricHalfCard(title: "Air quality", icon: "aqi.medium", lines: airQualityLines(weather))
-        case .pollen: MetricHalfCard(title: "Pollen", icon: "leaf", lines: pollenLines(weather))
-        case .wind: MetricHalfCard(title: "Wind", icon: "wind", lines: windLines(weather))
+        case .airQuality: AirQualityCard(weather: weather)
+        case .pollen: PollenCard(weather: weather)
+        case .wind: WindCard(weather: weather, units: appState.units)
         case .humidity: MetricHalfCard(title: "Humidity", icon: "humidity", lines: humidityLines(weather))
         case .pressure: MetricHalfCard(title: "Pressure", icon: "gauge", lines: pressureLines(weather))
         case .uv: MetricHalfCard(title: "UV index", icon: "sun.max", lines: uvLines(weather))

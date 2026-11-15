@@ -33,7 +33,7 @@ final class AppFlowTests: XCTestCase {
 
         app.tabBars.buttons["Settings"].tap()
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 5))
-        XCTAssertTrue(anyElement(app, "settings.temperature").exists)
+        XCTAssertTrue(anyElement(app, "settings.appearance").exists)
     }
 
     func testTappingHourlyCardOpensDetail() {
@@ -61,8 +61,11 @@ final class AppFlowTests: XCTestCase {
         ).firstMatch.label
 
         app.tabBars.buttons["Settings"].tap()
+        let appearance = anyElement(app, "settings.appearance")
+        XCTAssertTrue(appearance.waitForExistence(timeout: 10), "Appearance row missing")
+        appearance.tap()
         let picker = anyElement(app, "settings.temperature")
-        XCTAssertTrue(picker.exists, "temperature picker missing")
+        XCTAssertTrue(picker.waitForExistence(timeout: 10), "temperature picker missing")
         picker.tap()
         app.buttons["Fahrenheit (°F)"].tap()
 

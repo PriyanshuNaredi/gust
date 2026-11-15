@@ -18,11 +18,9 @@ final class ShellTests: XCTestCase {
         app.launchArguments = ["-resetState"]
         app.launch()
 
-        // The app now opens on the forecast tab; the ported arithmetic lives in the
-        // Units tab, so select it before asserting those values.
-        let unitsTab = app.tabBars.buttons["Units"]
-        XCTAssertTrue(unitsTab.waitForExistence(timeout: 10), "Units tab missing")
-        unitsTab.tap()
+        // The ported arithmetic lives behind Settings > Debug, the way upstream keeps
+        // its diagnostics out of the main surface.
+        openDebugScreen(app)
 
         XCTAssertTrue(app.staticTexts["app.title"].waitForExistence(timeout: 10),
                       "app did not finish launching")
@@ -42,21 +40,26 @@ final class ShellTests: XCTestCase {
                        "wind chill must be nil above 10 °C")
     }
 
+    private func openDebugScreen(_ app: XCUIApplication) {
+        let settingsTab = app.tabBars.buttons["Settings"]
+        XCTAssertTrue(settingsTab.waitForExistence(timeout: 10), "Settings tab missing")
+        settingsTab.tap()
+        let debug = app.descendants(matching: .any).matching(identifier: "settings.debug").firstMatch
+        XCTAssertTrue(debug.waitForExistence(timeout: 10), "Debug row missing")
+        debug.tap()
+    }
+
     func testRelaunchKeepsWorking() {
         let app = XCUIApplication()
         app.launchArguments = ["-resetState"]
         app.launch()
-        let unitsTab = app.tabBars.buttons["Units"]
-        XCTAssertTrue(unitsTab.waitForExistence(timeout: 10))
-        unitsTab.tap()
+        openDebugScreen(app)
         XCTAssertTrue(app.staticTexts["app.title"].waitForExistence(timeout: 10))
         app.terminate()
         app.launch()
-        // The tab selection is not persisted, so the second launch opens on Weather
-        // again; select Units before asserting.
-        let unitsTabAgain = app.tabBars.buttons["Units"]
-        XCTAssertTrue(unitsTabAgain.waitForExistence(timeout: 10), "second launch failed")
-        unitsTabAgain.tap()
+        // Tab selection and navigation are not persisted, so walk to Debug again
+        // before asserting the second launch rendered the same values.
+        openDebugScreen(app)
         XCTAssertTrue(app.staticTexts["app.title"].waitForExistence(timeout: 10),
                       "second launch failed")
     }

@@ -15,7 +15,6 @@ struct LocationsScreen: View {
     @State private var isSearching = false
 
     var body: some View {
-        NavigationStack {
             List {
                 Section("Saved") {
                     ForEach(appState.places) { place in
@@ -60,12 +59,15 @@ struct LocationsScreen: View {
                 .accessibilityIdentifier("locations.add")
             }
             .sheet(isPresented: $isSearching) {
-                PlaceSearchView { place in
-                    appState.add(place)
-                    isSearching = false
+                // A sheet needs its own navigation container for .searchable and the
+                // Cancel button to work; the parent stack does not reach into it.
+                NavigationStack {
+                    PlaceSearchView { place in
+                        appState.add(place)
+                        isSearching = false
+                    }
                 }
             }
-        }
     }
 }
 
@@ -81,7 +83,6 @@ struct PlaceSearchView: View {
     @State private var searchTask: Task<Void, Never>?
 
     var body: some View {
-        NavigationStack {
             List {
                 if let errorMessage {
                     Text(errorMessage)
@@ -125,7 +126,6 @@ struct PlaceSearchView: View {
                 }
             }
         }
-    }
 
     /// Debounced: a request per keystroke would hammer a free public service.
     private func scheduleSearch(for text: String) {
@@ -155,76 +155,6 @@ struct PlaceSearchView: View {
             // Say what happened: a silent empty list looks like "no such city".
             results = []
             errorMessage = "Search failed: \(error)"
-        }
-    }
-}
-
-struct SettingsScreen: View {
-    @Environment(AppState.self) private var appState
-
-    var body: some View {
-        @Bindable var state = appState
-
-        NavigationStack {
-            Form {
-                Section("Units") {
-                    Picker("Temperature", selection: $state.units.temperature) {
-                        Text("Celsius (°C)").tag(DisplayUnit.celsius)
-                        Text("Fahrenheit (°F)").tag(DisplayUnit.fahrenheit)
-                    }
-                    .accessibilityIdentifier("settings.temperature")
-
-                    Picker("Wind speed", selection: $state.units.speed) {
-                        Text("km/h").tag(DisplayUnit.kilometersPerHour)
-                        Text("m/s").tag(DisplayUnit.metersPerSecond)
-                        Text("mph").tag(DisplayUnit.milesPerHour)
-                        Text("knots").tag(DisplayUnit.knots)
-                        Text("Beaufort").tag(DisplayUnit.beaufort)
-                    }
-
-                    Picker("Pressure", selection: $state.units.pressure) {
-                        Text("hPa").tag(DisplayUnit.hectopascals)
-                        Text("mmHg").tag(DisplayUnit.millimetersOfMercury)
-                        Text("inHg").tag(DisplayUnit.inchesOfMercury)
-                    }
-
-                    Picker("Precipitation", selection: $state.units.precipitation) {
-                        Text("Millimetres").tag(DisplayUnit.millimeters)
-                        Text("Inches").tag(DisplayUnit.inches)
-                    }
-
-                    Picker("Distance", selection: $state.units.distance) {
-                        Text("Kilometres").tag(DisplayUnit.kilometers)
-                        Text("Miles").tag(DisplayUnit.miles)
-                        Text("Metres").tag(DisplayUnit.meters)
-                    }
-                }
-
-                Section("Clock") {
-                    Toggle("12-hour clock", isOn: $state.units.twelveHourClock)
-                }
-
-                Section("Data") {
-                    LabeledContent("Source", value: "Open-Meteo")
-                    LabeledContent("Attribution", value: "CC BY 4.0")
-                }
-
-                Section("About") {
-                    NavigationLink("Licences and notices") { LicencesScreen() }
-                        .accessibilityIdentifier("settings.licences")
-                    LabeledContent("App", value: "Gust")
-                    LabeledContent("Port of", value: "Breezy Weather 6.2.2")
-                    LabeledContent("Licence", value: "LGPL-3.0")
-                    Text("""
-                    Gust is an independent port of Breezy Weather. It ships under the \
-                    GNU Lesser General Public License v3.0 and includes the upstream \
-                    licence and additional terms. Weather data by Open-Meteo (CC BY 4.0).
-                    """)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                }
-            }
-            .navigationTitle("Settings")
         }
     }
 }

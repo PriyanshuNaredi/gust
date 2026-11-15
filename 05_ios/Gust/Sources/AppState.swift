@@ -12,11 +12,15 @@
 import BreezyUnits
 import Foundation
 import Observation
+import SwiftUI
 
 @MainActor
 @Observable
 final class AppState {
     private static let preferencesKey = "gust.units.v1"
+    private static let themeKey = "gust.theme.v1"
+    private static let hiddenCardsKey = "gust.hiddenCards.v1"
+    private static let refreshKey = "gust.refreshMinutes.v1"
     private static let placesFile = "places.json"
 
     /// Berlin, matching the fixtures the package tests use.
@@ -34,6 +38,22 @@ final class AppState {
         didSet { persistUnits() }
     }
 
+    /// Appearance and main-screen display, both persisted like the units.
+    var theme: AppTheme = .system {
+        didSet { UserDefaults.standard.set(theme.rawValue, forKey: Self.themeKey) }
+    }
+
+    /// Cards the user hid. Header and footer are not optional: the screen needs a
+    /// header to identify the place, and the footer carries the attribution.
+    var hiddenCards: Set<String> = [] {
+        didSet { UserDefaults.standard.set(Array(hiddenCards), forKey: Self.hiddenCardsKey) }
+    }
+
+    /// Minutes between automatic refreshes. 0 disables it.
+    var refreshMinutes: Int = 30 {
+        didSet { UserDefaults.standard.set(refreshMinutes, forKey: Self.refreshKey) }
+    }
+
     private(set) var places: [Place]
     private(set) var selectedPlaceID: Int?
 
@@ -45,6 +65,9 @@ final class AppState {
         if ProcessInfo.processInfo.arguments.contains("-resetState") {
             defaults.removeObject(forKey: Self.preferencesKey)
             defaults.removeObject(forKey: "gust.selectedPlace")
+            defaults.removeObject(forKey: Self.themeKey)
+            defaults.removeObject(forKey: Self.hiddenCardsKey)
+            defaults.removeObject(forKey: Self.refreshKey)
             try? FileManager.default.removeItem(
                 at: Self.storageDirectory().appendingPathComponent(Self.placesFile)
             )
@@ -55,6 +78,9 @@ final class AppState {
         } else {
             units = UnitPreferences()
         }
+        theme = AppTheme(rawValue: defaults.string(forKey: Self.themeKey) ?? "") ?? .system
+        hiddenCards = Set(defaults.stringArray(forKey: Self.hiddenCardsKey) ?? [])
+        refreshMinutes = defaults.object(forKey: Self.refreshKey) as? Int ?? 30
         let stored = Self.loadPlaces()
         places = stored.isEmpty ? [Self.defaultPlace] : stored
         selectedPlaceID = defaults.object(forKey: "gust.selectedPlace") as? Int ?? places.first?.id
@@ -117,5 +143,27 @@ final class AppState {
         guard let data = try? Data(contentsOf: url),
               let places = try? JSONDecoder().decode([Place].self, from: data) else { return [] }
         return places
+    }
+}
+
+enum AppTheme: String, CaseIterable, Identifiable {
+    case system, light, dark
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .system: return "System"
+        case .light: return "Light"
+        case .dark: return "Dark"
+        }
+    }
+
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: return nil
+        case .light: return .light
+        case .dark: return .dark
+        }
     }
 }

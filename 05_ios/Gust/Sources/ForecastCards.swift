@@ -577,36 +577,34 @@ struct PrecipitationCard: View {
     var body: some View {
         CardShell(title: "Precipitation", icon: "drop") {
             VStack(alignment: .leading, spacing: 2) {
-                Text(totalText)
+                Text(valueText)
                     .font(.title3.weight(.regular))
-                Text(probabilityText)
+                Text(labelText)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("card.precipitation")
     }
 
-    private var todayHours: [HourlyForecast] {
-        guard let reference = weather.current?.date ?? weather.hourlyForecast.first?.date else { return [] }
-        let calendar = Calendar.current
-        return weather.hourlyForecast.filter { calendar.isDate($0.date, inSameDayAs: reference) }
+    /// Upstream shows the half of the day you are in and names it after what is in it,
+    /// so the label and the number cannot disagree.
+    private var summary: PrecipitationSummary? {
+        let now = weather.current?.date ?? Date()
+        return PrecipitationSummary.today(from: weather.hourlyForecast, at: now, timeZone: weather.timeZone)
     }
 
-    private var totalText: String {
-        let total = todayHours.compactMap { $0.precipitation?.inMillimeters }.reduce(0, +)
-        return units.string(total.millimeters)
+    private var valueText: String {
+        guard let summary else { return "—" }
+        return units.string(summary.total)
     }
 
-    private var probabilityText: String {
-        let peak = todayHours.compactMap { $0.precipitationProbability?.inPercent }.max()
-        guard let peak else { return "—" }
-        return String(format: "chance %.0f %%", peak)
+    private var labelText: String {
+        summary?.label ?? "Precipitation"
     }
 }
-
-// MARK: - Sun, moon, clock, footer
 
 struct SunCard: View {
     let weather: Weather
@@ -706,5 +704,185 @@ struct FooterCard: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 6)
         .accessibilityIdentifier("card.footer")
+    }
+}
+
+
+// MARK: - Air quality: a ring, not a paragraph
+
+struct AirQualityCard: View {
+    let weather: Weather
+
+    var body: some View {
+        let quality = weather.airQuality(near: weather.current?.date ?? Date())
+        CardShell(title: "Air quality", icon: "aqi.medium") {
+            HStack(alignment: .center, spacing: 12) {
+                ZStack {
+                    Circle()
+                        .stroke(Color.accentColor.opacity(0.12), lineWidth: 8)
+                    Circle()
+                        .trim(from: 0, to: fraction(quality?.index))
+                        .stroke(levelColor(quality?.index), style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
+                    VStack(spacing: 0) {
+                        Text(quality?.index.map(String.init) ?? "—")
+                            .font(.title2.weight(.semibold))
+                        Text(levelName(quality?.index))
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .frame(width: 84, height: 84)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    if let pm25 = quality?.concentration(of: .pm25) {
+                        Text("PM2.5")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        Text(String(format: "%.1f", pm25.microgramsPerCubicMeter))
+                            .font(.footnote.weight(.medium))
+                    }
+                    if let pm10 = quality?.concentration(of: .pm10) {
+                        Text("PM10")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        Text(String(format: "%.1f", pm10.microgramsPerCubicMeter))
+                            .font(.footnote.weight(.medium))
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("card.airQuality")
+    }
+
+    /// The ring is the index against the scale's top (250 = "extreme"), so a good day
+    /// looks nearly empty rather than nearly full.
+    private func fraction(_ index: Int?) -> Double {
+        guard let index else { return 0 }
+        return min(max(Double(index) / 250.0, 0), 1)
+    }
+
+    private func levelName(_ index: Int?) -> String {
+        guard let index else { return "—" }
+        switch index {
+        case ..<20: return "Good"
+        case ..<50: return "Fair"
+        case ..<100: return "Poor"
+        case ..<150: return "Very poor"
+        case ..<250: return "Excessive"
+        default: return "Extreme"
+        }
+    }
+
+    private func levelColor(_ index: Int?) -> Color {
+        guard let index else { return .secondary }
+        switch index {
+        case ..<20: return .green
+        case ..<50: return .yellow
+        case ..<100: return .orange
+        case ..<150: return .red
+        default: return .purple
+        }
+    }
+}
+
+// MARK: - Wind, with the direction it comes from
+
+struct WindCard: View {
+    let weather: Weather
+    let units: UnitPreferences
+
+    var body: some View {
+        let wind = weather.current?.wind
+        CardShell(title: "Wind", icon: "wind") {
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Text(units.string(wind?.speed))
+                        .font(.title3.weight(.regular))
+                        .accessibilityIdentifier("wind.speed")
+                    if let degree = wind?.direction {
+                        // Upstream rotates an arrow so its head points where the wind
+                        // is going; "From N" is the same fact in words.
+                        Image(systemName: "location.north.fill")
+                            .font(.caption)
+                            .rotationEffect(.degrees(degree + 180))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Text(detail(wind))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("wind.detail")
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("card.wind")
+    }
+
+    private func detail(_ wind: Wind?) -> String {
+        guard let wind else { return "—" }
+        if let speed = wind.speed, let gusts = wind.gusts, gusts.inMetersPerSecond > speed.inMetersPerSecond {
+            return "Gusts: " + units.string(gusts)
+        }
+        guard let degree = wind.direction else { return "—" }
+        guard (0...360).contains(degree) else { return "Variable" }
+        return "From " + compassPoint(degree)
+    }
+
+    /// Sixteen-point compass, the same resolution upstream's `getDirection(short:)` uses.
+    private func compassPoint(_ degrees: Double) -> String {
+        let points = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+                      "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
+        let index = Int(((degrees.truncatingRemainder(dividingBy: 360) + 360)
+            .truncatingRemainder(dividingBy: 360) + 11.25) / 22.5) % 16
+        return points[index]
+    }
+}
+
+// MARK: - Pollen, coloured by its own level
+
+struct PollenCard: View {
+    let weather: Weather
+
+    var body: some View {
+        let pollen = weather.pollen(near: weather.current?.date ?? Date())
+        CardShell(title: "Pollen", icon: "leaf") {
+            if weather.pollen.isEmpty {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("—").font(.title3.weight(.regular))
+                    Text("no coverage here").font(.caption).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            } else if let worst = pollen?.worstType, worst.index > 0 {
+                HStack(alignment: .center, spacing: 8) {
+                    Circle()
+                        .fill(pollenColor(worst.index))
+                        .frame(width: 12, height: 12)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(worst.type.rawValue.capitalized)
+                            .font(.footnote.weight(.medium))
+                        Text(PollenIndexCalculator.name(for: worst.index) ?? "")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .accessibilityIdentifier("pollen.level")
+            } else {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("None").font(.title3.weight(.regular))
+                    Text("no pollen detected").font(.caption).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("card.pollen")
+    }
+
+    private func pollenColor(_ index: Int) -> Color {
+        guard let colour = PollenIndexCalculator.color(for: index) else { return .secondary }
+        return Color(red: colour.red / 255, green: colour.green / 255, blue: colour.blue / 255)
     }
 }

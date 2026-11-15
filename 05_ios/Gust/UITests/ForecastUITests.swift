@@ -57,12 +57,13 @@ final class ForecastUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["header.temperature"].waitForExistence(timeout: 30))
 
         let identifiers = [
-            "card.precipitation", "card.wind", "card.air quality", "card.humidity",
-            "card.uv", "card.visibility", "card.pressure", "card.sunshine"
+            "cardLink.precipitation", "cardLink.wind", "cardLink.airQuality",
+            "cardLink.pollen", "cardLink.humidity", "cardLink.uv",
+            "cardLink.visibility", "cardLink.pressure"
         ]
 
         // Scroll until the half-card block is on screen.
-        let firstCard = anyElement(app, "card.wind")
+        let firstCard = anyElement(app, "cardLink.wind")
         XCTAssertTrue(firstCard.waitForExistence(timeout: 10), "half cards missing")
         var attempts = 0
         while !firstCard.isHittable && attempts < 8 {
