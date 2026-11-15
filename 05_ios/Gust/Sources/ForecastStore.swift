@@ -22,10 +22,9 @@ final class ForecastStore {
 
     private(set) var state: State = .loading
 
-    /// Berlin, so the first card stack reproduces the fixture the tests use.
-    let latitude: Double = 52.52
-    let longitude: Double = 13.41
-    let placeName: String = "Berlin"
+    /// Set by the view from AppState. Changing it reloads.
+    var place: Place = AppState.defaultPlace
+    private var loadedPlaceID: Int?
 
     private var hasLoaded = false
 
@@ -40,22 +39,27 @@ final class ForecastStore {
     }
 
     func loadIfNeeded() async {
-        guard !hasLoaded else { return }
+        guard !hasLoaded || loadedPlaceID != place.id else { return }
         await reload()
     }
 
     func reload() async {
         hasLoaded = true
+        loadedPlaceID = place.id
         state = .loading
         do {
             let client = OpenMeteoClient()
             async let weatherResult = client.fetch(
-                latitude: latitude, longitude: longitude, baseURL: baseURL
+                latitude: place.latitude, longitude: place.longitude, baseURL: baseURL
             )
             // Air quality is a separate endpoint: its failure must not take the
             // forecast down, so it is best-effort and defaults to absent.
             async let airResult: OpenMeteoAirQualityResult? = {
-                do { return try await client.fetchAirQuality(latitude: latitude, longitude: longitude) }
+                do {
+                    return try await client.fetchAirQuality(
+                        latitude: place.latitude, longitude: place.longitude
+                    )
+                }
                 catch { return nil }
             }()
 

@@ -17,10 +17,21 @@ import BreezyUnits
 /// The playground stays because it is the cheapest way to see the ported arithmetic
 /// next to the ported service's live output.
 struct ContentView: View {
+    @State private var appState = AppState()
+
     var body: some View {
         TabView {
             ForecastScreen()
+                .environment(appState)
                 .tabItem { Label("Weather", systemImage: "cloud.sun") }
+
+            LocationsScreen()
+                .environment(appState)
+                .tabItem { Label("Locations", systemImage: "list.bullet") }
+
+            SettingsScreen()
+                .environment(appState)
+                .tabItem { Label("Settings", systemImage: "gearshape") }
 
             UnitsPlaygroundView()
                 .tabItem { Label("Units", systemImage: "ruler") }

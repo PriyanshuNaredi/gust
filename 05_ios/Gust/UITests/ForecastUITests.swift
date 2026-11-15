@@ -41,7 +41,7 @@ final class ForecastUITests: XCTestCase {
         // The nowcast card is drawn with Canvas, not text, so its presence is the
         // only assertion that makes sense here.
         XCTAssertTrue(anyElement(app, "card.nowcast").exists, "nowcast card missing")
-        XCTAssertTrue(anyElement(app, "card.daily").exists, "daily card missing")
+        XCTAssertTrue(anyElement(app, "cardLink.daily").exists, "daily card missing")
 
         // Upstream drops the last day of the payload; there must still be many days.
         XCTAssertTrue(anyElement(app, "daily.row.1").exists, "daily list has fewer than two rows")

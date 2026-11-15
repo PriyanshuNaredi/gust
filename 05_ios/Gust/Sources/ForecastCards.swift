@@ -101,6 +101,7 @@ func familyLabel(_ code: WeatherCode?) -> String {
 struct HeaderCard: View {
     let weather: Weather
     let place: String
+    let units: UnitPreferences
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -121,7 +122,7 @@ struct HeaderCard: View {
                     Text(familyLabel(weather.current?.weatherCode))
                         .font(.subheadline)
                     if let feelsLike = weather.current?.apparentTemperature {
-                        Text(String(format: "feels like %.1f °C", feelsLike.inCelsius))
+                        Text("feels like " + units.string(feelsLike))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -138,7 +139,7 @@ struct HeaderCard: View {
 
     private var temperatureText: String {
         guard let temperature = weather.current?.temperature else { return "—" }
-        return String(format: "%.1f°", temperature.inCelsius)
+        return String(format: "%.1f°", units.temperature == .fahrenheit ? temperature.inFahrenheit : temperature.inCelsius)
     }
 }
 
@@ -146,6 +147,7 @@ struct HeaderCard: View {
 
 struct HourlyCard: View {
     let weather: Weather
+    let units: UnitPreferences
 
     /// Twelve hours from the current one, as upstream's hourly card shows a strip.
     private var hours: [HourlyForecast] {
@@ -164,7 +166,7 @@ struct HourlyCard: View {
                                 .foregroundStyle(.secondary)
                             Image(systemName: symbolName(for: hour.weatherCode))
                                 .font(.body)
-                            Text(hour.temperature.map { String(format: "%.0f°", $0.inCelsius) } ?? "—")
+                            Text(units.degrees(hour.temperature))
                                 .font(.footnote.weight(.medium))
                             if let probability = hour.precipitationProbability, probability.inPercent >= 5 {
                                 Text(String(format: "%.0f%%", probability.inPercent))
@@ -186,6 +188,7 @@ struct HourlyCard: View {
 
 struct DailyCard: View {
     let weather: Weather
+    let units: UnitPreferences
 
     var body: some View {
         CardShell(title: "Daily", icon: "calendar") {
@@ -212,17 +215,12 @@ struct DailyCard: View {
                 }
             }
         }
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("card.daily")
+        // No container identifier here: it merges the per-row identifiers
+        // ("daily.row.0-daily.row.0-…"). The card is addressable as cardLink.daily.
     }
 
-    private func minText(_ day: DailyForecast) -> String {
-        day.temperatureMin.map { String(format: "%.0f°", $0.inCelsius) } ?? "—"
-    }
-
-    private func maxText(_ day: DailyForecast) -> String {
-        day.temperatureMax.map { String(format: "%.0f°", $0.inCelsius) } ?? "—"
-    }
+    private func minText(_ day: DailyForecast) -> String { units.degrees(day.temperatureMin) }
+    private func maxText(_ day: DailyForecast) -> String { units.degrees(day.temperatureMax) }
 }
 
 /// The high/low range bar, scaled to the whole forecast rather than to the day.
@@ -360,6 +358,7 @@ struct NowcastCard: View {
 /// ledger in 02_parity/PARITY_SPEC.md.
 struct PrecipitationCard: View {
     let weather: Weather
+    let units: UnitPreferences
 
     var body: some View {
         CardShell(title: "Precipitation", icon: "drop") {
@@ -383,7 +382,7 @@ struct PrecipitationCard: View {
 
     private var totalText: String {
         let total = todayHours.compactMap { $0.precipitation?.inMillimeters }.reduce(0, +)
-        return String(format: "%.1f mm", total)
+        return units.string(total.millimeters)
     }
 
     private var probabilityText: String {

@@ -19,7 +19,7 @@ public enum OpenMeteoError: Error, Equatable {
 }
 
 public struct OpenMeteoClient: Sendable {
-    private let session: URLSession
+    let session: URLSession
 
     public init(session: URLSession = .shared) {
         self.session = session

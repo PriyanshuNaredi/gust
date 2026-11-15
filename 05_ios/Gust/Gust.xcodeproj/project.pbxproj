@@ -7,7 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2AD78C6118D65901D7F9AF52 /* LocationsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6CBDFE6BEACFE9B841AF4B2 /* LocationsScreen.swift */; };
 		30E2FDE520F16949BBC5F4D5 /* GustApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7211111497C2E2478DB2330B /* GustApp.swift */; };
+		899977ED4324CD0C0919F3FC /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167DBBB7AE572785A91FDC45 /* AppState.swift */; };
 		95AEBF81116FDEE2DC934B5A /* ForecastUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B06D370F365930430E8F62EA /* ForecastUITests.swift */; };
 		A351E7C37C1E739255F9902D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76BB2FDF1E31D9C4BE3C9ECC /* ContentView.swift */; };
 		A49F672AE81D9C8A3857557C /* ForecastScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94E44869BA8C95E0872F80B6 /* ForecastScreen.swift */; };
@@ -15,6 +17,9 @@
 		AAAF1D3333CACEF4645645FC /* ForecastCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78D64056B64DB9AFD5B17D34 /* ForecastCards.swift */; };
 		AB4BDF90FC516D2FA11DAF34 /* ForecastStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CECB9F19923C1D75F79FB8E /* ForecastStore.swift */; };
 		AC6D9683DE5E6F122400C653 /* LocalTimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FC2C95849ECCC53FD8DEDE9 /* LocalTimeTests.swift */; };
+		BEA8A1F72B8EB96C5CA695BF /* DetailValues.swift in Sources */ = {isa = PBXBuildFile; fileRef = C82242CC74C70825C96A0760 /* DetailValues.swift */; };
+		D984FF6EFEBBD3ACCDD18E30 /* DetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 782176AB08FC02226799C2D6 /* DetailScreen.swift */; };
+		DECCFDA4DE20D255FCA46CE0 /* AppFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63C4514FAB579633C9DE7797 /* AppFlowTests.swift */; };
 		EBB34CF4CF2739C9F6C4CD81 /* BreezyUnits in Frameworks */ = {isa = PBXBuildFile; productRef = 646D6B6CAAF2A909E06711D4 /* BreezyUnits */; };
 /* End PBXBuildFile section */
 
@@ -29,17 +34,22 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		167DBBB7AE572785A91FDC45 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		3CECB9F19923C1D75F79FB8E /* ForecastStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastStore.swift; sourceTree = "<group>"; };
 		5A3973CD73E2C09C85540D58 /* ShellTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellTests.swift; sourceTree = "<group>"; };
+		63C4514FAB579633C9DE7797 /* AppFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFlowTests.swift; sourceTree = "<group>"; };
 		6FC2C95849ECCC53FD8DEDE9 /* LocalTimeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalTimeTests.swift; sourceTree = "<group>"; };
 		7211111497C2E2478DB2330B /* GustApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GustApp.swift; sourceTree = "<group>"; };
 		76BB2FDF1E31D9C4BE3C9ECC /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		782176AB08FC02226799C2D6 /* DetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailScreen.swift; sourceTree = "<group>"; };
 		78D64056B64DB9AFD5B17D34 /* ForecastCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastCards.swift; sourceTree = "<group>"; };
 		8E87FF924013A166083E8D2A /* BreezyUnits */ = {isa = PBXFileReference; lastKnownFileType = folder; name = BreezyUnits; path = ../BreezyUnits; sourceTree = SOURCE_ROOT; };
 		94E44869BA8C95E0872F80B6 /* ForecastScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastScreen.swift; sourceTree = "<group>"; };
 		B06D370F365930430E8F62EA /* ForecastUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastUITests.swift; sourceTree = "<group>"; };
+		C82242CC74C70825C96A0760 /* DetailValues.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailValues.swift; sourceTree = "<group>"; };
 		DBC5832EC5C150F583C8EDB6 /* GustUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GustUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		EA884193C5554F0D80196BB1 /* Gust.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Gust.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F6CBDFE6BEACFE9B841AF4B2 /* LocationsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationsScreen.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,11 +67,15 @@
 		0484821084E2CDAE1C7D1CE0 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				167DBBB7AE572785A91FDC45 /* AppState.swift */,
 				76BB2FDF1E31D9C4BE3C9ECC /* ContentView.swift */,
+				782176AB08FC02226799C2D6 /* DetailScreen.swift */,
+				C82242CC74C70825C96A0760 /* DetailValues.swift */,
 				78D64056B64DB9AFD5B17D34 /* ForecastCards.swift */,
 				94E44869BA8C95E0872F80B6 /* ForecastScreen.swift */,
 				3CECB9F19923C1D75F79FB8E /* ForecastStore.swift */,
 				7211111497C2E2478DB2330B /* GustApp.swift */,
+				F6CBDFE6BEACFE9B841AF4B2 /* LocationsScreen.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -78,6 +92,7 @@
 		68EDDDB1DC9C21BCC0CEA2C2 /* UITests */ = {
 			isa = PBXGroup;
 			children = (
+				63C4514FAB579633C9DE7797 /* AppFlowTests.swift */,
 				B06D370F365930430E8F62EA /* ForecastUITests.swift */,
 				6FC2C95849ECCC53FD8DEDE9 /* LocalTimeTests.swift */,
 				5A3973CD73E2C09C85540D58 /* ShellTests.swift */,
@@ -190,11 +205,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				899977ED4324CD0C0919F3FC /* AppState.swift in Sources */,
 				A351E7C37C1E739255F9902D /* ContentView.swift in Sources */,
+				D984FF6EFEBBD3ACCDD18E30 /* DetailScreen.swift in Sources */,
+				BEA8A1F72B8EB96C5CA695BF /* DetailValues.swift in Sources */,
 				AAAF1D3333CACEF4645645FC /* ForecastCards.swift in Sources */,
 				A49F672AE81D9C8A3857557C /* ForecastScreen.swift in Sources */,
 				AB4BDF90FC516D2FA11DAF34 /* ForecastStore.swift in Sources */,
 				30E2FDE520F16949BBC5F4D5 /* GustApp.swift in Sources */,
+				2AD78C6118D65901D7F9AF52 /* LocationsScreen.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -202,6 +221,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DECCFDA4DE20D255FCA46CE0 /* AppFlowTests.swift in Sources */,
 				95AEBF81116FDEE2DC934B5A /* ForecastUITests.swift in Sources */,
 				AC6D9683DE5E6F122400C653 /* LocalTimeTests.swift in Sources */,
 				A6E1F48EFC1D5769023108FC /* ShellTests.swift in Sources */,

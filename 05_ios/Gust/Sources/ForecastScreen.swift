@@ -14,6 +14,7 @@ import BreezyUnits
 import SwiftUI
 
 struct ForecastScreen: View {
+    @Environment(AppState.self) private var appState
     @State private var store = ForecastStore()
 
     /// Which cards the main screen shows, in Android's order. Adding a card here is
@@ -27,12 +28,20 @@ struct ForecastScreen: View {
         .sun, .moon, .clock, .footer
     ]
 
+    /// Kept so the navigation destination can render a detail page without
+    /// re-reading the store's state inside the link.
+    private var loadedWeather: Weather? {
+        if case .loaded(let weather) = store.state { return weather }
+        return nil
+    }
+
     var body: some View {
+        NavigationStack {
         ScrollView {
             VStack(spacing: 12) {
                 switch store.state {
                 case .loading:
-                    ProgressView("Loading \(store.placeName)…")
+                    ProgressView("Loading \(store.place.name)…")
                         .padding(.top, 60)
                         .accessibilityIdentifier("forecast.loading")
                 case .failed(let reason):
@@ -42,6 +51,7 @@ struct ForecastScreen: View {
                         Text(reason)
                     } actions: {
                         Button("Try again") { Task { await store.reload() } }
+                    .accessibilityIdentifier("forecast.retry")
                     }
                     .accessibilityIdentifier("forecast.error")
                 case .loaded(let weather):
@@ -54,8 +64,21 @@ struct ForecastScreen: View {
             .padding(.vertical, 10)
         }
         .background(Color(.systemGroupedBackground))
-        .task { await store.loadIfNeeded() }
+        .navigationDestination(for: MainCardKind.self) { kind in
+            if let weather = loadedWeather {
+                DetailScreen(kind: kind, weather: weather, units: appState.units)
+            }
+        }
+        .task(id: appState.selectedPlace.id) {
+            store.place = appState.selectedPlace
+            await store.loadIfNeeded()
+        }
+        .refreshable {
+            store.place = appState.selectedPlace
+            await store.reload()
+        }
         .accessibilityIdentifier("forecast.screen")
+        }
     }
 
     @ViewBuilder
@@ -80,12 +103,29 @@ struct ForecastScreen: View {
 
     @ViewBuilder
     private func card(_ kind: MainCardKind, weather: Weather) -> some View {
+        if kind.hasDetail {
+            NavigationLink(value: kind) {
+                cardBody(kind, weather: weather)
+            }
+            .buttonStyle(.plain)
+            // Without this the link becomes a single accessibility element and every
+            // card identifier inside it disappears -- the same trap as the container
+            // identifiers, one level up.
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("cardLink.\(kind.rawValue)")
+        } else {
+            cardBody(kind, weather: weather)
+        }
+    }
+
+    @ViewBuilder
+    private func cardBody(_ kind: MainCardKind, weather: Weather) -> some View {
         switch kind {
-        case .header: HeaderCard(weather: weather, place: store.placeName)
+        case .header: HeaderCard(weather: weather, place: store.place.name, units: appState.units)
         case .precipitationNowcast: NowcastCard(nowcast: Nowcast(steps: weather.minutelyForecast), zone: weather.timeZone)
-        case .precipitation: PrecipitationCard(weather: weather)
-        case .hourly: HourlyCard(weather: weather)
-        case .daily: DailyCard(weather: weather)
+        case .precipitation: PrecipitationCard(weather: weather, units: appState.units)
+        case .hourly: HourlyCard(weather: weather, units: appState.units)
+        case .daily: DailyCard(weather: weather, units: appState.units)
         case .airQuality: MetricHalfCard(title: "Air quality", icon: "aqi.medium", lines: airQualityLines(weather))
         case .wind: MetricHalfCard(title: "Wind", icon: "wind", lines: windLines(weather))
         case .humidity: MetricHalfCard(title: "Humidity", icon: "humidity", lines: humidityLines(weather))
@@ -95,7 +135,7 @@ struct ForecastScreen: View {
         case .sun: SunCard(weather: weather)
         case .moon: MoonCard(weather: weather)
         case .clock: ClockCard(timeZone: weather.timeZone)
-        case .footer: FooterCard(weather: weather, place: store.placeName)
+        case .footer: FooterCard(weather: weather, place: store.place.name)
         default:
             // Cards not ported yet render as nothing rather than as an empty box.
             EmptyView()
@@ -107,9 +147,9 @@ struct ForecastScreen: View {
     private func windLines(_ weather: Weather) -> [String] {
         guard let wind = weather.current?.wind else { return ["—"] }
         var lines: [String] = []
-        if let speed = wind.speed { lines.append(String(format: "%.1f km/h", speed.inKilometersPerHour)) }
+        if let speed = wind.speed { lines.append(appState.units.string(speed)) }
         if let direction = wind.direction { lines.append("\(Int(direction.rounded()))°") }
-        if let gusts = wind.gusts { lines.append(String(format: "gusts %.1f", gusts.inKilometersPerHour)) }
+        if let gusts = wind.gusts { lines.append("gusts " + appState.units.string(gusts)) }
         return lines.isEmpty ? ["—"] : lines
     }
 
@@ -130,14 +170,14 @@ struct ForecastScreen: View {
         guard let humidity = weather.current?.relativeHumidity else { return ["—"] }
         var lines = [String(format: "%.0f %%", humidity.inPercent)]
         if let dewPoint = weather.current?.dewPoint {
-            lines.append(String(format: "dew %.1f °C", dewPoint.inCelsius))
+            lines.append("dew " + appState.units.string(dewPoint))
         }
         return lines
     }
 
     private func pressureLines(_ weather: Weather) -> [String] {
         guard let pressure = weather.current?.pressure else { return ["—"] }
-        return [String(format: "%.1f hPa", pressure.inHectopascals)]
+        return [appState.units.string(pressure)]
     }
 
     private func uvLines(_ weather: Weather) -> [String] {
@@ -147,7 +187,7 @@ struct ForecastScreen: View {
 
     private func visibilityLines(_ weather: Weather) -> [String] {
         guard let visibility = weather.current?.visibility else { return ["—"] }
-        return [String(format: "%.1f km", visibility.inKilometers)]
+        return [appState.units.string(visibility)]
     }
 
     private func legacySunLines(_ weather: Weather) -> [String] {
