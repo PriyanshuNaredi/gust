@@ -331,3 +331,27 @@ the two always agree. Here they are two different questions with two different a
 `Weather.currentIsWet` is the flag: the current weather code's family is one of
 rain, snow, sleet, hail, thunder, thunderstorm. It never invents data — it only changes
 one sentence, and only when the chart holds nothing.
+
+## Half-size blocks: four guides, not a padding
+
+All ten half-size containers are `1:1` cells whose content is bounded by four guidelines
+at **20 %** and **80 %** (`block_{top,bottom,start,end}_guideline`). The title row sits on
+the top guide, the number fills the space below it, and the label's baseline sits on the
+bottom guide. Circular blocks (`Corner.Full`) centre the title row horizontally; rounded
+ones leave it at the start guide.
+
+The port had stacked a title and a value in a `VStack` with a 16 dp inset, which is right
+for a full-width card and wrong for a square one: the air-quality number sat above the
+middle of its circle and the title drifted left of centre. `BlockShell` now implements the
+guides once, and every square block uses it: air quality, precipitation, pollen, wind,
+humidity, UV, pressure, visibility, sun, moon.
+
+Two things that moved with it, both from the layouts rather than from taste:
+
+| Block | Upstream | Was |
+|---|---|---|
+| Air quality | `ArcProgress`, `app:max="400"`, `app:arc_angle="270"` — three quarters of a ring, gap at the bottom, 5 dp margin, `colorOutline` track, level colour for the progress | A full `Circle` ring plus an `HStack` with a PM2.5/PM10 column, which belongs on the details screen, not the block |
+| Wind | Speed and direction on the guides, the caption on the bottom guide | Speed, arrow and caption stacked at the top |
+
+The PM2.5/PM10 numbers are not lost: they live on `card.airQuality`'s details screen, which
+is where upstream puts them.

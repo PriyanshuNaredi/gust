@@ -512,38 +512,35 @@ struct MetricHalfCard: View {
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
-        CardShell(title: title, icon: icon, shape: shape) {
-            VStack(alignment: .leading, spacing: 2) {
-                // Upstream splits a block's number from its unit ("1,022" + "hPa"), so
-                // the number can be 45sp without the unit forcing it to shrink.
-                HStack(alignment: .firstTextBaseline, spacing: 3) {
-                    Text(number)
-                        .font(.system(size: 45, weight: .regular))
+        BlockShell(title: title, icon: icon, shape: shape) {
+            // Upstream splits a block's number from its unit ("1,022" + "hPa"), so
+            // the number can be 45sp without the unit forcing it to shrink.
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(number)
+                    .font(.system(size: 45, weight: .regular))
+                    .foregroundStyle(BreezyTheme.onSurface(scheme))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                if let unit {
+                    Text(unit)
+                        .font(.system(size: 20, weight: .regular))
                         .foregroundStyle(BreezyTheme.onSurface(scheme))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                    if let unit {
-                        Text(unit)
-                            .font(.system(size: 20, weight: .regular))
-                            .foregroundStyle(BreezyTheme.onSurface(scheme))
-                    }
-                }
-                if let secondary {
-                    BlockSecondary(text: secondary)
                 }
             }
+        } footer: {
+            if let secondary {
+                BlockSecondary(text: secondary)
+            }
         }
-        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("card.\(title.lowercased())")
     }
 
-    /// "1008.0 hPa" → ("1008.0", "hPa"); "54 %" → ("54", "%"); "0.1" → ("0.1", nil).
     private var split: (String, String?) {
         guard let first = lines.first else { return ("—", nil) }
-        guard let space = first.lastIndex(of: " ") else { return (first, nil) }
-        let unit = String(first[first.index(after: space)...])
-        guard unit.contains(where: \.isLetter) || unit == "%" else { return (first, nil) }
-        return (String(first[..<space]), unit)
+        // "12 km/h" -> ("12", "km/h"); "1,022 hPa" -> ("1,022", "hPa").
+        let parts = first.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
+        guard parts.count == 2 else { return (first, nil) }
+        return (String(parts[0]), String(parts[1]))
     }
 
     private var number: String { split.0 }
@@ -567,13 +564,11 @@ struct PrecipitationCard: View {
     let units: UnitPreferences
 
     var body: some View {
-        CardShell(title: "Precipitation", icon: "drop") {
-            VStack(alignment: .leading, spacing: 2) {
-                BlockValue(text: valueText)
-                BlockSecondary(text: labelText)
-            }
+        BlockShell(title: "Precipitation", icon: "drop") {
+            BlockValue(text: valueText)
+        } footer: {
+            BlockSecondary(text: labelText)
         }
-        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("card.precipitation")
     }
 
@@ -601,21 +596,19 @@ struct SunCard: View {
     private var today: DailyForecast? { weather.dailyForecast.first }
 
     var body: some View {
-        CardShell(title: "Sun", icon: "sunrise") {
-            VStack(alignment: .leading, spacing: 6) {
-                AstroArc(
-                    progress: progress,
-                    marker: AnyView(Image(systemName: "sun.max.fill").foregroundStyle(.orange)),
-                    leading: today?.sunrise.map { $0.localTime(in: weather.timeZone) } ?? "—",
-                    trailing: today?.sunset.map { $0.localTime(in: weather.timeZone) } ?? "—"
-                )
-                if let daylight = today?.daylightDuration {
-                    BlockSecondary(text: String(format: "%.0f h %02.0f min", floor(daylight / 3600),
-                                                (daylight / 60).truncatingRemainder(dividingBy: 60)))
-                }
+        BlockShell(title: "Sun", icon: "sunrise") {
+            AstroArc(
+                progress: progress,
+                marker: AnyView(Image(systemName: "sun.max.fill").foregroundStyle(.orange)),
+                leading: today?.sunrise.map { $0.localTime(in: weather.timeZone) } ?? "—",
+                trailing: today?.sunset.map { $0.localTime(in: weather.timeZone) } ?? "—"
+            )
+        } footer: {
+            if let daylight = today?.daylightDuration {
+                BlockSecondary(text: String(format: "%.0f h %02.0f min", floor(daylight / 3600),
+                                            (daylight / 60).truncatingRemainder(dividingBy: 60)))
             }
         }
-        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("card.sun")
     }
 
@@ -680,17 +673,16 @@ struct MoonCard: View {
     }
 
     var body: some View {
-        CardShell(title: "Moon", icon: "moon") {
-            VStack(alignment: .leading, spacing: 6) {
-                AstroArc(
-                    progress: phase.illumination,
-                    marker: AnyView(Image(systemName: phase.symbolName).foregroundStyle(.secondary)),
-                    leading: String(format: "%.0f %%", phase.illumination * 100),
-                    trailing: phase.name
-                )
-            }
+        BlockShell(title: "Moon", icon: "moon") {
+            AstroArc(
+                progress: phase.illumination,
+                marker: AnyView(Image(systemName: phase.symbolName).foregroundStyle(.secondary)),
+                leading: String(format: "%.0f %%", phase.illumination * 100),
+                trailing: phase.name
+            )
+        } footer: {
+            EmptyView()
         }
-        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("card.moon")
     }
 }
@@ -742,52 +734,44 @@ struct FooterCard: View {
 
 struct AirQualityCard: View {
     let weather: Weather
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         let quality = weather.airQuality(near: weather.current?.date ?? Date())
-        CardShell(title: "Air quality", icon: "aqi.medium", shape: .circle) {
-            HStack(alignment: .center, spacing: 12) {
+        BlockShell(
+            title: "Air quality",
+            icon: "aqi.medium",
+            shape: .circle,
+            behind: AnyView(
+                // `ArcProgress` with a 5dp margin, `app:max="400"` and
+                // `app:arc_angle="270"`: three quarters of a ring, the gap at the
+                // bottom, not a full circle. A 360° ring reads as a dial; this reads
+                // as the gauge the original draws.
                 ZStack {
                     Circle()
-                        .stroke(Color.accentColor.opacity(0.12), lineWidth: 8)
+                        .trim(from: 0, to: 0.75)
+                        .stroke(BreezyTheme.onSurfaceVariant(scheme).opacity(0.18),
+                                style: StrokeStyle(lineWidth: 8, lineCap: .round))
                     Circle()
-                        .trim(from: 0, to: fraction(quality?.index))
-                        .stroke(levelColor(quality?.index), style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                        .rotationEffect(.degrees(-90))
-                    VStack(spacing: 0) {
-                        Text(quality?.index.map(String.init) ?? "—")
-                            .font(.system(size: 45, weight: .regular))
-                        Text(levelName(quality?.index))
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
+                        .trim(from: 0, to: 0.75 * fraction(quality?.index))
+                        .stroke(levelColor(quality?.index),
+                                style: StrokeStyle(lineWidth: 8, lineCap: .round))
                 }
-                .frame(width: 120, height: 120)
-
-                VStack(alignment: .leading, spacing: 3) {
-                    if let pm25 = quality?.concentration(of: .pm25) {
-                        Text("PM2.5")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                        Text(String(format: "%.1f", pm25.microgramsPerCubicMeter))
-                            .font(.footnote.weight(.medium))
-                    }
-                    if let pm10 = quality?.concentration(of: .pm10) {
-                        Text("PM10")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                        Text(String(format: "%.1f", pm10.microgramsPerCubicMeter))
-                            .font(.footnote.weight(.medium))
-                    }
-                }
-                Spacer(minLength: 0)
-            }
+                // Trim starts at 3 o'clock; -135° puts the first end at the bottom-left
+                // and leaves the gap centred on the bottom.
+                .rotationEffect(.degrees(135))
+                .padding(5)
+                .accessibilityHidden(true)
+            )
+        ) {
+            BlockValue(text: quality?.index.map(String.init) ?? "—")
+        } footer: {
+            BlockSecondary(text: levelName(quality?.index))
         }
-        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("card.airQuality")
     }
 
-    /// The ring is the index against the scale's top (250 = "extreme"), so a good day
+/// The ring is the index against the scale's top (250 = "extreme"), so a good day
     /// looks nearly empty rather than nearly full.
     private func fraction(_ index: Int?) -> Double {
         guard let index else { return 0 }
@@ -827,31 +811,26 @@ struct WindCard: View {
 
     var body: some View {
         let wind = weather.current?.wind
-        CardShell(title: "Wind", icon: "wind", shape: .circle) {
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
-                    Text(units.string(wind?.speed))
-                        .font(.system(size: 26, weight: .regular))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
-                        .accessibilityIdentifier("wind.speed")
-                    if let degree = wind?.direction {
-                        // Upstream rotates an arrow so its head points where the wind
-                        // is going; "From N" is the same fact in words.
-                        Image(systemName: "location.north.fill")
-                            .font(.caption)
-                            .rotationEffect(.degrees(degree + 180))
-                            .foregroundStyle(.secondary)
-                    }
+        BlockShell(title: "Wind", icon: "wind", shape: .circle) {
+            HStack(spacing: 4) {
+                Text(units.string(wind?.speed))
+                    .font(.system(size: 24, weight: .regular))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .accessibilityIdentifier("wind.speed")
+                if let degree = wind?.direction {
+                    // Upstream rotates an arrow so its head points where the wind is
+                    // going; "From N" is the same fact in words.
+                    Image(systemName: "location.north.fill")
+                        .font(.caption)
+                        .rotationEffect(.degrees(degree + 180))
+                        .foregroundStyle(.secondary)
                 }
-                Text(detail(wind))
-                    .font(.system(size: 14))
-                    .foregroundStyle(BreezyTheme.onSurfaceVariant(scheme))
-                    .lineLimit(2)
-                    .accessibilityIdentifier("wind.detail")
             }
+        } footer: {
+            BlockSecondary(text: detail(wind))
+                .accessibilityIdentifier("wind.detail")
         }
-        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("card.wind")
     }
 
@@ -882,35 +861,32 @@ struct PollenCard: View {
 
     var body: some View {
         let pollen = weather.pollen(near: weather.current?.date ?? Date())
-        CardShell(title: "Pollen", icon: "leaf") {
+        BlockShell(title: "Pollen", icon: "leaf") {
             if weather.pollen.isEmpty {
-                VStack(alignment: .leading, spacing: 2) {
-                    BlockValue(text: "—")
-                    BlockSecondary(text: "no coverage here")
-                }
+                BlockValue(text: "—")
             } else if let worst = pollen?.worstType, worst.index > 0 {
-                HStack(alignment: .center, spacing: 8) {
+                HStack(spacing: 6) {
                     Circle()
                         .fill(pollenColor(worst.index))
-                        .frame(width: 12, height: 12)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(worst.type.rawValue.capitalized)
-                            .font(.footnote.weight(.medium))
-                        Text(PollenIndexCalculator.name(for: worst.index) ?? "")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+                        .frame(width: 10, height: 10)
+                    Text(worst.type.rawValue.capitalized)
+                        .font(.system(size: 22, weight: .regular))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
                 }
                 .accessibilityIdentifier("pollen.level")
             } else {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("None").font(.title3.weight(.regular))
-                    Text("no pollen detected").font(.caption).foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                BlockValue(text: "None")
+            }
+        } footer: {
+            if weather.pollen.isEmpty {
+                BlockSecondary(text: "no coverage here")
+            } else if let worst = pollen?.worstType, worst.index > 0 {
+                BlockSecondary(text: PollenIndexCalculator.name(for: worst.index) ?? "")
+            } else {
+                BlockSecondary(text: "no pollen detected")
             }
         }
-        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("card.pollen")
     }
 

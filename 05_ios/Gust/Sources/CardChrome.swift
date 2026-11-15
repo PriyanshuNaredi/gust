@@ -62,7 +62,8 @@ extension MainCardKind {
 
 // MARK: - Card
 
-/// The shared card: rounded surface, soft elevation, title row, content.
+/// The shared full-width card: rounded surface, soft elevation, title row, content.
+/// Half-size cards use `BlockShell`, which places them on upstream's 20 % guidelines.
 struct BreezyCard<Content: View>: View {
     @Environment(\.colorScheme) private var scheme
 
@@ -75,35 +76,18 @@ struct BreezyCard<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
-        Group {
-            switch shape {
-            case .extraLarge:
-                VStack(alignment: .leading, spacing: 8) { titleRow; content.padding(.horizontal, 16).padding(.bottom, 16) }
-                    // Fill the cell: paired cards are framed to a square, and a short
-                    // card must not leave its neighbour floating a few points lower.
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                    .background(
-                        RoundedRectangle(cornerRadius: 28, style: .continuous)
-                            .fill(BreezyTheme.surface(scheme))
-                            .shadow(color: .black.opacity(scheme == .dark ? 0.35 : 0.10), radius: 4, y: 2)
-                    )
-            case .circle:
-                // Upstream's circular blocks are square cells with the content inset to
-                // 20 % of the square. Drawing the circle *behind* a taller VStack put the
-                // title outside the circle and let long values spill over its edge.
-                ZStack {
-                    Circle()
-                        .fill(BreezyTheme.surface(scheme))
-                        .shadow(color: .black.opacity(scheme == .dark ? 0.35 : 0.10), radius: 4, y: 2)
-                    VStack(spacing: 4) {
-                        titleRow
-                        content
-                    }
-                    .padding(.horizontal, 24)
-                }
-                .aspectRatio(1, contentMode: .fit)
-            }
+        VStack(alignment: .leading, spacing: 8) {
+            titleRow
+            content.padding(.horizontal, 16).padding(.bottom, 16)
         }
+        // Fill the cell: paired cards are framed to a square, and a short
+        // card must not leave its neighbour floating a few points lower.
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(BreezyTheme.surface(scheme))
+                .shadow(color: .black.opacity(scheme == .dark ? 0.35 : 0.10), radius: 4, y: 2)
+        )
         .accessibilityElement(children: .contain)
     }
 
@@ -120,9 +104,92 @@ struct BreezyCard<Content: View>: View {
                     .minimumScaleFactor(0.7)
             }
             .foregroundStyle(BreezyTheme.onSurfaceVariant(scheme))
-            .padding(.horizontal, shape == .extraLarge ? 16 : 0)
-            .padding(.top, shape == .extraLarge ? 16 : 0)
+            .padding(.horizontal, 16)
+            .padding(.top, 16)
         }
+    }
+}
+
+// MARK: - Square blocks
+
+/// Upstream's half-size blocks, all ten of which are `1:1` cells whose content is
+/// bounded by four guidelines at **20 %** and **80 %** (`container_main_*.xml`):
+/// the title row sits on the top guide, the number fills the space below it, and the
+/// label's baseline sits on the bottom guide.
+///
+/// Porting that geometry instead of stacking a title and a value in a `VStack` is what
+/// stops the number drifting to the top of a circular card: on a `Corner.Full` cell the
+/// guides are the only reason the content looks centred, and a hand-picked padding
+/// looks wrong the moment the font or the screen changes.
+///
+/// The one difference between the two shapes: a circular block centres its title row
+/// horizontally (a packed chain between the start and end guides), a rounded one leaves
+/// it at the start guide.
+struct BlockShell<Value: View, Footer: View>: View {
+    @Environment(\.colorScheme) private var scheme
+
+    var title: String
+    var icon: String?
+    var shape: CardShape = .extraLarge
+    /// Drawn behind the content and outside the guides: upstream's `ArcProgress` on the
+    /// air-quality block, which spans the whole square at a 5dp margin.
+    var behind: AnyView?
+    @ViewBuilder var value: Value
+    @ViewBuilder var footer: Footer
+
+    private var centred: Bool { shape == .circle }
+
+    var body: some View {
+        GeometryReader { geo in
+            let insetX = geo.size.width * 0.2
+            let insetY = geo.size.height * 0.2
+            ZStack {
+                surface
+                if let behind {
+                    behind
+                }
+                VStack(alignment: centred ? .center : .leading, spacing: 0) {
+                    titleRow
+                    Spacer(minLength: 0)
+                    value
+                        .frame(maxWidth: .infinity, alignment: centred ? .center : .leading)
+                    Spacer(minLength: 0)
+                    footer
+                        .frame(maxWidth: .infinity, alignment: centred ? .center : .leading)
+                }
+                .padding(.horizontal, insetX)
+                .padding(.top, insetY)
+                .padding(.bottom, insetY)
+            }
+        }
+        .accessibilityElement(children: .contain)
+    }
+
+    @ViewBuilder
+    private var surface: some View {
+        switch shape {
+        case .extraLarge:
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(BreezyTheme.surface(scheme))
+                .shadow(color: .black.opacity(scheme == .dark ? 0.35 : 0.10), radius: 4, y: 2)
+        case .circle:
+            Circle()
+                .fill(BreezyTheme.surface(scheme))
+                .shadow(color: .black.opacity(scheme == .dark ? 0.35 : 0.10), radius: 4, y: 2)
+        }
+    }
+
+    private var titleRow: some View {
+        HStack(spacing: 4) {
+            if let icon {
+                Image(systemName: icon).font(.system(size: 15, weight: .regular))
+            }
+            Text(title)
+                .font(.system(size: 16, weight: .bold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .foregroundStyle(BreezyTheme.onSurfaceVariant(scheme))
     }
 }
 

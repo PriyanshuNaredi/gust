@@ -26,6 +26,9 @@ ships under its own name, its own icon, and ships LGPL-3.0 with the upstream not
   asset chosen by condition, day/night and theme, with its geometric scene over it
   (rotating sun squares, breathing cloud circles, rain streaks, snowflakes, hail, wind
   gusts, night stars, meteors, thunder flash), and the header
+- **Square blocks on upstream's guides** — every half-size block is a 1:1 cell with its
+  title on the 20 % guide, its number in the middle and its label on the 80 % guide; the
+  air-quality ring is a 270° arc with max 400, as upstream's `ArcProgress` is
 - **Honest empty states** — when the source describes rain but measures 0.0 mm, the
   nowcast says "No precipitation expected in the next 2 hours" rather than an unexplained
   "No precipitation" under a rainy header
