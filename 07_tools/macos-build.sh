@@ -23,9 +23,17 @@ echo "==> xcodegen"
 ( cd "$PROJ" && xcodegen generate --spec project.yml >/dev/null )
 
 echo "==> build"
-xcodebuild -project "$PROJ/Gust.xcodeproj" -scheme Gust -configuration Debug \
-  -destination "id=$SIM" -derivedDataPath "$DERIVED" build 2>&1 \
-  | grep -E "error:|BUILD SUCCEEDED|BUILD FAILED" || true
+# Capture, do not pipe into grep: `xcodebuild | grep` returns grep's status, so a
+# failed build still looked like success and the script installed a stale app.
+BUILD_LOG=$(mktemp)
+if ! xcodebuild -project "$PROJ/Gust.xcodeproj" -scheme Gust -configuration Debug \
+      -destination "id=$SIM" -derivedDataPath "$DERIVED" build > "$BUILD_LOG" 2>&1; then
+  grep -E "error:" "$BUILD_LOG" | head -20
+  echo "FAIL: build failed (full log: $BUILD_LOG)" >&2
+  exit 1
+fi
+grep -cE "BUILD SUCCEEDED" "$BUILD_LOG" >/dev/null || { echo "FAIL: no BUILD SUCCEEDED in log" >&2; exit 1; }
+rm -f "$BUILD_LOG"
 
 APP="$DERIVED/Build/Products/Debug-iphonesimulator/Gust.app"
 [ -d "$APP" ] || { echo "FAIL: no app bundle at $APP" >&2; exit 1; }

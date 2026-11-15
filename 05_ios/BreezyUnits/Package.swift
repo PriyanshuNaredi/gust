@@ -14,6 +14,12 @@ let package = Package(
     ],
     targets: [
         .target(name: "BreezyUnits"),
-        .testTarget(name: "BreezyUnitsTests", dependencies: ["BreezyUnits"])
+        .testTarget(
+            name: "BreezyUnitsTests",
+            dependencies: ["BreezyUnits"],
+            // A real Open-Meteo payload, recorded with the exact request upstream
+            // sends. Committed so the decoding and mapping tests never need network.
+            resources: [.copy("Resources")]
+        )
     ]
 )
