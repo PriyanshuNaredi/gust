@@ -182,3 +182,12 @@ Upstream gates pollen on `COPERNICUS_POLLEN_BBOX` (25° W–45° E, 30° N–72�
 port, for the same reason: outside that box the variables come back empty, and an empty pollen card
 reads as "no pollen" when the truth is "not covered". The card says "no coverage here" instead, and
 a test pins the box corners.
+
+## Deviations added by the card, settings and detail slices
+
+| # | Deviation | Reason | Reversible? |
+|---|---|---|---|
+| 20 | Card subtitles omitted on hourly/daily | The subtitle text is `current.hourlyForecast` / `current.dailyForecast`, a sentence only some providers send. Open-Meteo sends none, so upstream shows no subtitle with this source either. | Yes, with a provider that sends it |
+| 21 | Detail pages omit deviation-from-normal, the "Normal" reference lines and degree days | All three need a 30-year climatology. A fabricated baseline would be worse than their absence. | Yes, with a climate data set |
+| 22 | Main screen hides Notifications and External modules rows entirely | No iOS equivalent in this port (see SCOPE.md). An empty screen implying the feature exists would be dishonest. | No |
+| 23 | Hydrad-day split for precipitation uses upstream's fixed 05:00/17:00 boundary, not sunrise/sunset | That is what upstream does; matching it keeps the card and the detail panel consistent. | Yes |
