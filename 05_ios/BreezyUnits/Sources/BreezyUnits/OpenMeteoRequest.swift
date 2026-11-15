@@ -64,7 +64,8 @@ public enum OpenMeteoRequest {
         pastDays: Int = 1,
         includeForecast: Bool = true,
         includeCurrent: Bool = true,
-        includeMinutely: Bool = true
+        includeMinutely: Bool = true,
+        baseURL: String = OpenMeteoRequest.baseURL
     ) -> URL {
         var components = URLComponents(string: baseURL)!
         var items: [URLQueryItem] = [

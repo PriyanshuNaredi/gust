@@ -18,6 +18,12 @@ final class ShellTests: XCTestCase {
         app.launchArguments = ["-resetState"]
         app.launch()
 
+        // The app now opens on the forecast tab; the ported arithmetic lives in the
+        // Units tab, so select it before asserting those values.
+        let unitsTab = app.tabBars.buttons["Units"]
+        XCTAssertTrue(unitsTab.waitForExistence(timeout: 10), "Units tab missing")
+        unitsTab.tap()
+
         XCTAssertTrue(app.staticTexts["app.title"].waitForExistence(timeout: 10),
                       "app did not finish launching")
 
@@ -40,9 +46,17 @@ final class ShellTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-resetState"]
         app.launch()
+        let unitsTab = app.tabBars.buttons["Units"]
+        XCTAssertTrue(unitsTab.waitForExistence(timeout: 10))
+        unitsTab.tap()
         XCTAssertTrue(app.staticTexts["app.title"].waitForExistence(timeout: 10))
         app.terminate()
         app.launch()
+        // The tab selection is not persisted, so the second launch opens on Weather
+        // again; select Units before asserting.
+        let unitsTabAgain = app.tabBars.buttons["Units"]
+        XCTAssertTrue(unitsTabAgain.waitForExistence(timeout: 10), "second launch failed")
+        unitsTabAgain.tap()
         XCTAssertTrue(app.staticTexts["app.title"].waitForExistence(timeout: 10),
                       "second launch failed")
     }

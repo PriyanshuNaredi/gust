@@ -30,7 +30,7 @@ public struct CurrentObservation: Hashable, Sendable {
     public let date: Date
     /// Raw WMO code as sent by the source. Mapping to Breezy's `WeatherCode`
     /// families is a separate slice, deliberately not guessed here.
-    public let weatherCode: Int?
+    public let weatherCode: WeatherCode?
     public let temperature: Temperature?
     /// The source's own "feels like", not our computed humidex/wind chill.
     public let apparentTemperature: Temperature?
@@ -44,7 +44,7 @@ public struct CurrentObservation: Hashable, Sendable {
 
     public init(
         date: Date,
-        weatherCode: Int? = nil,
+        weatherCode: WeatherCode? = nil,
         temperature: Temperature? = nil,
         apparentTemperature: Temperature? = nil,
         wind: Wind? = nil,

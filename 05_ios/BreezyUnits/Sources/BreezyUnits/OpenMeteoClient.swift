@@ -25,8 +25,12 @@ public struct OpenMeteoClient: Sendable {
         self.session = session
     }
 
-    public func fetch(latitude: Double, longitude: Double) async throws -> OpenMeteoWeatherResult {
-        let url = OpenMeteoRequest.url(latitude: latitude, longitude: longitude)
+    public func fetch(
+        latitude: Double,
+        longitude: Double,
+        baseURL: String = OpenMeteoRequest.baseURL
+    ) async throws -> OpenMeteoWeatherResult {
+        let url = OpenMeteoRequest.url(latitude: latitude, longitude: longitude, baseURL: baseURL)
         var request = URLRequest(url: url)
         request.timeoutInterval = 20
         request.setValue("application/json", forHTTPHeaderField: "Accept")
@@ -62,8 +66,12 @@ public struct OpenMeteoClient: Sendable {
         return result
     }
 
-    public func fetchCurrent(latitude: Double, longitude: Double) async throws -> CurrentObservation {
-        let result = try await fetch(latitude: latitude, longitude: longitude)
+    public func fetchCurrent(
+        latitude: Double,
+        longitude: Double,
+        baseURL: String = OpenMeteoRequest.baseURL
+    ) async throws -> CurrentObservation {
+        let result = try await fetch(latitude: latitude, longitude: longitude, baseURL: baseURL)
         guard let raw = result.current else { throw OpenMeteoError.empty }
         return OpenMeteoMapping.current(from: raw)
     }

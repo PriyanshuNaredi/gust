@@ -13,7 +13,23 @@
 import SwiftUI
 import BreezyUnits
 
+/// The app's root: the forecast, plus the units playground kept as a second tab.
+/// The playground stays because it is the cheapest way to see the ported arithmetic
+/// next to the ported service's live output.
 struct ContentView: View {
+    var body: some View {
+        TabView {
+            ForecastScreen()
+                .tabItem { Label("Weather", systemImage: "cloud.sun") }
+
+            UnitsPlaygroundView()
+                .tabItem { Label("Units", systemImage: "ruler") }
+        }
+    }
+}
+
+/// Stage-4 gate, kept as a tab.
+struct UnitsPlaygroundView: View {
     // Sample values chosen to exercise the ported computing functions.
     private let temperature = 25.celsius
     private let dewPoint = 18.celsius
@@ -27,6 +43,7 @@ struct ContentView: View {
     @State private var liveError: String?
 
     var body: some View {
+        ScrollView {
         VStack(alignment: .leading, spacing: 12) {
             Text("Gust")
                 .font(.largeTitle.weight(.semibold))
@@ -70,6 +87,7 @@ struct ContentView: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
+        }
         .task {
             do {
                 live = try await OpenMeteoClient().fetchCurrent(latitude: 52.52, longitude: 13.41)

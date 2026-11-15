@@ -2,7 +2,9 @@ name: Gust
 options:
   bundleIdPrefix: dev.priyanshu
   deploymentTarget:
-    iOS: "16.0"
+    # 17.0: @Observable is the app's state mechanism (iOS 16 would need
+    # ObservableObject + Combine plumbing that buys nothing here).
+    iOS: "17.0"
   createIntermediateGroups: true
 
 packages:
