@@ -164,6 +164,11 @@ struct AppearanceSettings: View {
                 .accessibilityIdentifier("settings.theme")
             }
 
+            Section("Background") {
+                Toggle("Animated background", isOn: $state.animateBackdrop)
+                    .accessibilityIdentifier("settings.animateBackdrop")
+            }
+
             Section("Units") {
                 Picker("Temperature", selection: $state.units.temperature) {
                     Text("Celsius (°C)").tag(DisplayUnit.celsius)

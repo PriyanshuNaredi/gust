@@ -22,6 +22,8 @@ What was ported from upstream, file by file:
 | `CardChrome.swift` (shapes, type scale, card chrome) | `res/layout/container_main_*.xml`, `res/values/dimens.xml`, `res/values/styles.xml` |
 | `WeatherIcons.swift` | `Constants.getResourcesName()`, `res/xml/icon_provider_drawable_filter.xml` |
 | `Resources/WeatherIcons/*.png` | `app/src/main/res/drawable/weather_*.png` (unmodified) |
+| `BreezyUnits/WeatherScene.swift` (gradients, cloud/rain/snow/hail/wind particle tables, sun and star geometry) | `ui-weather-view/src/main/res/drawable{,-night}/weather_background_*.xml` and `materialWeatherView/implementor/*Implementor.kt` |
+| `Gust/WeatherSceneView.swift` (the animated drawing) | the same implementors' `draw()` methods |
 | `ForecastScreen` navigation (no tab bar) | `res/menu/activity_main.xml` + `MainActivity` |
 
 ## Artwork

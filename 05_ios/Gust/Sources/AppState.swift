@@ -21,6 +21,7 @@ final class AppState {
     private static let themeKey = "gust.theme.v1"
     private static let hiddenCardsKey = "gust.hiddenCards.v1"
     private static let refreshKey = "gust.refreshMinutes.v1"
+    private static let animateBackdropKey = "gust.animateBackdrop.v1"
     private static let placesFile = "places.json"
 
     /// Berlin, matching the fixtures the package tests use.
@@ -49,6 +50,12 @@ final class AppState {
         didSet { UserDefaults.standard.set(Array(hiddenCards), forKey: Self.hiddenCardsKey) }
     }
 
+    /// Upstream's Appearance > "Animated background". Off means the scene is drawn once,
+    /// which is also the setting a user with an older phone will reach for.
+    var animateBackdrop: Bool = true {
+        didSet { UserDefaults.standard.set(animateBackdrop, forKey: Self.animateBackdropKey) }
+    }
+
     /// Minutes between automatic refreshes. 0 disables it.
     var refreshMinutes: Int = 30 {
         didSet { UserDefaults.standard.set(refreshMinutes, forKey: Self.refreshKey) }
@@ -68,6 +75,7 @@ final class AppState {
             defaults.removeObject(forKey: Self.themeKey)
             defaults.removeObject(forKey: Self.hiddenCardsKey)
             defaults.removeObject(forKey: Self.refreshKey)
+            defaults.removeObject(forKey: Self.animateBackdropKey)
             try? FileManager.default.removeItem(
                 at: Self.storageDirectory().appendingPathComponent(Self.placesFile)
             )
@@ -81,6 +89,7 @@ final class AppState {
         theme = AppTheme(rawValue: defaults.string(forKey: Self.themeKey) ?? "") ?? .system
         hiddenCards = Set(defaults.stringArray(forKey: Self.hiddenCardsKey) ?? [])
         refreshMinutes = defaults.object(forKey: Self.refreshKey) as? Int ?? 30
+        animateBackdrop = defaults.object(forKey: Self.animateBackdropKey) as? Bool ?? true
         let stored = Self.loadPlaces()
         places = stored.isEmpty ? [Self.defaultPlace] : stored
         selectedPlaceID = defaults.object(forKey: "gust.selectedPlace") as? Int ?? places.first?.id

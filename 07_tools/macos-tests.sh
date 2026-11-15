@@ -20,8 +20,14 @@ run_logic() {
   # `out=$(failing command)` aborts the script under `set -e` before any of our
   # error reporting runs (exit 65, no output). Capture the status explicitly.
   out=$( cd "$ROOT/05_ios/BreezyUnits" && swift test 2>&1 ) || rc=$?
-  local count
-  count=$(printf "%s\n" "$out" | sed -n 's/.*Executed \([0-9][0-9]*\) tests.*/\1/p' | sort -rn | head -1)
+  # Two frameworks report differently and the output can carry both: XCTest prints
+  # "Executed N tests", Swift Testing prints "Test run with N tests passed". Taking
+  # only the first silently dropped every swift-testing suite from the count -- and
+  # from the gate that fails a run executing nothing.
+  local xctest swiftesting count
+  xctest=$(printf "%s\n" "$out" | sed -n 's/.*Executed \([0-9][0-9]*\) tests.*/\1/p' | sort -rn | head -1)
+  swiftesting=$(printf "%s\n" "$out" | sed -n 's/.*Test run with \([0-9][0-9]*\) tests passed.*/\1/p' | sort -rn | head -1)
+  count=$(( ${xctest:-0} + ${swiftesting:-0} ))
   # `grep ... && { exit 1; }` looks correct and is not: when grep finds nothing
   # (the passing case) the compound returns 1 and `set -e` kills the script --
   # silently, with no output at all. Always use `if`.
@@ -31,7 +37,7 @@ run_logic() {
     exit 1
   fi
   [ "${count:-0}" -gt 0 ] || { echo "FAIL: logic layer executed 0 tests" >&2; exit 1; }
-  echo "logic: $count tests passed"
+  echo "logic: $count tests passed (${xctest:-0} XCTest + ${swiftesting:-0} swift-testing)"
 }
 
 run_ui() {
@@ -41,8 +47,14 @@ run_ui() {
     && xcodegen generate --spec project.yml >/dev/null \
     && xcodebuild test -project Gust.xcodeproj -scheme Gust \
          -destination "id=$SIM" -derivedDataPath "$DERIVED" 2>&1 ) || rc=$?
-  local count
-  count=$(printf "%s\n" "$out" | sed -n 's/.*Executed \([0-9][0-9]*\) tests.*/\1/p' | sort -rn | head -1)
+  # Two frameworks report differently and the output can carry both: XCTest prints
+  # "Executed N tests", Swift Testing prints "Test run with N tests passed". Taking
+  # only the first silently dropped every swift-testing suite from the count -- and
+  # from the gate that fails a run executing nothing.
+  local xctest swiftesting count
+  xctest=$(printf "%s\n" "$out" | sed -n 's/.*Executed \([0-9][0-9]*\) tests.*/\1/p' | sort -rn | head -1)
+  swiftesting=$(printf "%s\n" "$out" | sed -n 's/.*Test run with \([0-9][0-9]*\) tests passed.*/\1/p' | sort -rn | head -1)
+  count=$(( ${xctest:-0} + ${swiftesting:-0} ))
   # Judge the run by xcodebuild's own verdict, not by grepping for "error:".
   # XCTest logs a harmless "Failed to scroll to visible ... error: kAXErrorCannotComplete"
   # line while falling back to a different tap, and a text filter reads that as a

@@ -215,3 +215,34 @@ weather colour, and SwiftUI will not take a colour that arrives after the bar is
 with a value derived from the loaded forecast renders as the system default), so the bar is a material
 blur over the same backdrop; and the header has no weather artwork upstream, so the port's header has
 none either.
+
+## The background: an asset and a scene, both ported by the numbers
+
+The first version of the backdrop was three blurred white circles over a hand-mixed
+gradient. Upstream has neither: `WeatherImplementorFactory.getBackgroundId` picks one of
+twelve `weather_background_*.xml` gradient assets by (weather kind, daylight) and the
+`-night` resource qualifier overrides eleven of them for dark theme; a `MaterialWeatherView`
+then animates a geometric scene over it.
+
+Both halves are now data in `BreezyUnits.WeatherScene`, asserted in
+`WeatherSceneTests`:
+
+| What | Ported value |
+|---|---|
+| Gradients | All 12 assets plus 11 `-night` overrides, three stops each, angle 270, colours pinned hex by hex in a test |
+| Clear day | Three rotating square layers, 8 rays each, alphas 0.16 / 0.08 / 0.04, quarter turns of 3 / 4 / 5 s, centred at (width, 0.5 × width) |
+| Cloud / cloudy / fog / haze / thunder | The implementors' circle tables: 6 circles for `cloud` (alphas 0.40/0.10), 6 for `cloudy`/`thunder`, 9 for `fog`/`haze` (alpha 0.3), each with its own breathe period and 1.1–1.2 peak scale |
+| Rain / sleet / thunderstorm | 75 streaks (45 for sleet), three colour bands, 8° tilt, widths 0.002–0.003 of the diagonal (0.004–0.006 for sleet), heights 6–10× |
+| Snow | 50 circles, radii 0.005–0.012 of the diagonal, three bands |
+| Hail | 51 taller streaks, 10° tilt |
+| Wind | 160 thin gusts, three green bands |
+| Night | 50 stars (cloud kinds) / 70 (clear), ten-colour palette, fade in and out over 2.5–5 s |
+| Clear night | Ten meteors at 60°, reviving every 5–25 s |
+| Thunder | Violet flash (81, 67, 168) at 0.66 alpha, twice per cycle |
+
+Two deviations, both deliberate:
+
+| # | Deviation | Reason |
+|---|---|---|
+| 25 | The scene does not parallax with device tilt | Upstream feeds accelerometer rotation into every particle. Reading it needs `CoreMotion` and a motion-permission story for a background; the intrinsic motion (breathe, fall, twinkle) is what a user sees when holding the phone still |
+| 26 | The scene runs at 20 fps, not the display rate | Measured idle CPU on the main screen: ~10% at 30 fps, ~5.5% at 20 fps, ~0.3% paused. The scene is slow enough that 60 fps buys nothing visible. `Appearance → Animated background` pauses it entirely |

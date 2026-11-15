@@ -45,6 +45,17 @@ struct ForecastScreen: View {
         (loadedWeather?.isDaylight() ?? true) ? .black.opacity(0.86) : .white
     }
 
+    /// `-backdropKind <name> [-backdropNight]` pins the scene for screenshots: every
+    /// other path would need the weather to cooperate. Never set by the app itself.
+    private var backdropOverride: (kind: WeatherKind, daylight: Bool)? {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let flag = arguments.firstIndex(of: "-backdropKind"),
+              arguments.indices.contains(flag + 1),
+              let kind = WeatherKind(rawValue: arguments[flag + 1])
+        else { return nil }
+        return (kind, !arguments.contains("-backdropNight"))
+    }
+
     /// Kept so the navigation destination can render a detail page without
     /// re-reading the store's state inside the link.
     private var loadedWeather: Weather? {
@@ -59,8 +70,10 @@ struct ForecastScreen: View {
             // just behind the header card -- the header is transparent on top of it.
             if let weather = loadedWeather {
                 WeatherBackdropView(
-                    kind: WeatherBackdrop.kind(for: weather.current?.weatherCode ?? .cloudy),
-                    daylight: weather.isDaylight()
+                    kind: backdropOverride?.kind
+                        ?? WeatherBackdrop.kind(for: weather.current?.weatherCode ?? .cloudy),
+                    daylight: backdropOverride?.daylight ?? weather.isDaylight(),
+                    animated: appState.animateBackdrop
                 )
             }
         ScrollView {

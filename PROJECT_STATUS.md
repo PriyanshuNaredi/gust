@@ -18,13 +18,14 @@ subset and `02_parity/PARITY_SPEC.md` for what exactly.
 | 2 | Source recovery | **done** | upstream at tag `v6.2.2` + `recon/` for the binary's own facts |
 | 3 | Parity spec | **signed off** (Option A + defaults) | `02_parity/PARITY_SPEC.md` |
 | 4 | Scaffolding | **done** — app builds, installs, launches, links the package; UI gate green | `05_ios/Gust/`, `07_logs/shots/shell-launch.png` |
-| 5 | Data layer | **done**: units, Open-Meteo forecast + air quality + geocoding, hourly/daily/minutely/pollen models | 99 logic tests, 0 failures |
+| 5 | Data layer | **done**: units, Open-Meteo forecast + air quality + geocoding, hourly/daily/minutely/pollen models | 106 logic tests, 0 failures |
 | 6 | Main screen | **done**: header, nowcast, daily, hourly, 10 half/full cards, footer | UI tests green |
 | 7 | Detail pages | **done**: hourly, daily, per-metric series, air quality (Canvas) | UI tests green |
 | 8 | Locations + search | **done**: saved places, geocoding search, persistence | 10 UI tests green |
 | 9 | Settings | **done**: upstream's structure — background updates, appearance, main screen, location, sources, debug, licences | UI tests green |
 | 10 | Release | **done**: unsigned IPA + CI workflow | `ipa-build.sh` verifies bundle, version keys, licences, platform |
 | 6b | UI parity pass | **done**: weather backdrop, upstream header, trend tabs, AQ ring, wind arrow, pollen levels, day/night precipitation, detail date selector | screenshots in `07_logs/shots/` |
+| 6d | Weather background | **done**: upstream's three-stop gradient assets (day/night/theme) plus the geometric scene — sun, cloud circles, 75/45 rain streaks, 50 flakes, 51 hail, 160 wind gusts, 50/70 stars, 10 meteors, thunder flash — at 20 fps, with an "Animated background" setting | `05_ios/BreezyUnits/.../WeatherScene.swift` + 7 tests; idle CPU ~5.5% |
 | 6c | Visual layer from the layouts (tag `v0.2.0`) | **done**: two card shapes only, square half cells, 45pt value + separate unit, the 85 upstream weather drawables, 67pt trend columns, dashed sun/moon arcs, UV and visibility descriptions, tab bar removed | `02_parity/screenshots/main-top.png`, `main-lower.png`; 99 logic + 10 UI tests |
 
 ## Confirmed scope defaults (2026-11-15)
@@ -108,7 +109,7 @@ first, minutely-when-absent behaviour.
 | Locations / search | complete for one provider |
 | Settings | complete for what iOS can honour; notifications and widgets out (deviation 22) |
 | Release | unsigned IPA verified by `ipa-build.sh`; CI present, unpushed |
-| Tests | 99 package + 10 UI, all green |
+| Tests | 106 package + 10 UI, all green |
 
 ### Known gaps, all deliberate
 
