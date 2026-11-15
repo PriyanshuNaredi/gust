@@ -41,9 +41,10 @@ final class ShellTests: XCTestCase {
     }
 
     private func openDebugScreen(_ app: XCUIApplication) {
-        let settingsTab = app.tabBars.buttons["Settings"]
-        XCTAssertTrue(settingsTab.waitForExistence(timeout: 10), "Settings tab missing")
-        settingsTab.tap()
+        let menu = app.buttons["header.more"]
+        XCTAssertTrue(menu.waitForExistence(timeout: 10), "overflow menu missing")
+        menu.tap()
+        app.buttons["Settings"].tap()
         let debug = app.descendants(matching: .any).matching(identifier: "settings.debug").firstMatch
         XCTAssertTrue(debug.waitForExistence(timeout: 10), "Debug row missing")
         debug.tap()

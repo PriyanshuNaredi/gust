@@ -47,8 +47,12 @@ final class ForecastUITests: XCTestCase {
         XCTAssertTrue(anyElement(app, "card.nowcast").exists, "nowcast card missing")
         XCTAssertTrue(anyElement(app, "cardLink.daily").exists, "daily card missing")
 
-        // Upstream drops the last day of the payload; there must still be many days.
-        XCTAssertTrue(anyElement(app, "daily.row.1").exists, "daily list has fewer than two rows")
+        // The daily card's trend tabs prove the block is the tabbed trend view and not
+        // a placeholder. Per-day identifiers are not addressable: the card is a
+        // NavigationLink, and a link collapses its subtree into one button (the day
+        // count itself is asserted at the data level in BreezyUnitsTests).
+        XCTAssertTrue(app.buttons["tab.Conditions"].exists, "trend tabs missing")
+        XCTAssertTrue(app.buttons["tab.Wind"].exists, "trend tabs missing")
         XCTAssertFalse(anyElement(app, "forecast.error").exists, "error view shown instead of weather")
     }
 

@@ -16,6 +16,9 @@ import SwiftUI
 
 struct SettingsScreen: View {
     @Environment(AppState.self) private var appState
+    /// Set when the screen is presented as a sheet: it owns its navigation stack, so
+    /// the dismiss button has to live here rather than in the presenter.
+    var onDone: (() -> Void)? = nil
 
     var body: some View {
         NavigationStack {
@@ -108,6 +111,14 @@ struct SettingsScreen: View {
                 }
             }
             .navigationTitle("Settings")
+            .toolbar {
+                if let onDone {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Done", action: onDone)
+                            .accessibilityIdentifier("settings.done")
+                    }
+                }
+            }
         }
     }
 }

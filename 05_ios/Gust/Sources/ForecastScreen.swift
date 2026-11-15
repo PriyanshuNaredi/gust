@@ -17,6 +17,9 @@ struct ForecastScreen: View {
     @Environment(AppState.self) private var appState
     @State private var store = ForecastStore()
     @State private var showLocations = false
+    @State private var showSettings = false
+    @State private var showLicences = false
+    @State private var showMore = false
 
     /// Which cards the main screen shows, in Android's order. Adding a card here is
     /// the whole change — the layout rule decides its row.
@@ -61,7 +64,7 @@ struct ForecastScreen: View {
                 )
             }
         ScrollView {
-            VStack(spacing: 12) {
+            VStack(spacing: 8) {
                 switch store.state {
                 case .loading:
                     ProgressView("Loading \(store.place.name)…")
@@ -83,10 +86,11 @@ struct ForecastScreen: View {
                     }
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
         }
         .background(.clear)
+        .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: MainCardKind.self) { kind in
             if let weather = loadedWeather {
                 DetailScreen(kind: kind, weather: weather, units: appState.units)
@@ -133,15 +137,11 @@ struct ForecastScreen: View {
                     .accessibilityIdentifier("header.place")
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Button("Refresh", systemImage: "arrow.clockwise") {
-                        Task { await store.reload() }
-                    }
-                    Button("Edit place", systemImage: "pencil") {
-                        showLocations = true
-                    }
-                    NavigationLink("Settings", value: MainCardKind.header)
-                        .hidden()
+                // A `Menu` in the navigation bar is unreliable to drive from XCUITest
+                // (the tap is first treated as a scroll attempt and can fail), so the
+                // overflow is a plain button and a confirmation dialog.
+                Button {
+                    showMore = true
                 } label: {
                     Image(systemName: "ellipsis")
                 }
@@ -150,7 +150,36 @@ struct ForecastScreen: View {
                 .accessibilityIdentifier("header.more")
             }
         }
-        .toolbarBackground(.hidden, for: .navigationBar)
+        // The bar is the weather colour, visible at rest and while scrolling: a
+        // transparent bar let the place name draw on top of whatever card scrolled
+        // under it. (`toolbarBackgroundVisibility` is 18+; the deployment target is 17.)
+        // A transparent bar let the place name draw on top of whatever card scrolled
+        // under it. A material bar keeps the title legible at any scroll offset on
+        // iOS 17: a weather-coloured bar sampled from the loaded forecast is ignored
+        // by SwiftUI when the colour arrives after the bar is built, and
+        // `toolbarBackgroundVisibility` is 18+ while the deployment target is 17.
+        .toolbarBackground(.regularMaterial, for: .navigationBar)
+        .confirmationDialog("More", isPresented: $showMore, titleVisibility: .hidden) {
+            Button("Refresh", systemImage: "arrow.clockwise") {
+                Task { await store.reload() }
+            }
+            Button("Edit place", systemImage: "pencil") { showLocations = true }
+            Button("Settings", systemImage: "gearshape") { showSettings = true }
+            Button("Licences", systemImage: "doc.text") { showLicences = true }
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsScreen(onDone: { showSettings = false })
+        }
+        .sheet(isPresented: $showLicences) {
+            NavigationStack {
+                LicencesScreen()
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button("Done") { showLicences = false }
+                        }
+                    }
+            }
+        }
         .sheet(isPresented: $showLocations) {
             NavigationStack {
                 LocationsScreen()
@@ -164,21 +193,30 @@ struct ForecastScreen: View {
         }
     }
 
+    /// Upstream's half-size cells are square (the circular blocks are `1:1`), so a
+    /// rect card and a circle card in the same row stand the same height.
+    private var halfSide: CGFloat {
+        (UIScreen.main.bounds.width - 24 - 8) / 2
+    }
+
     @ViewBuilder
     private func rowView(_ row: MainCardRow, weather: Weather) -> some View {
         switch row {
         case .full(let kind):
             card(kind, weather: weather)
         case .half(let lhs, let rhs):
-            HStack(alignment: .top, spacing: 12) {
+            HStack(alignment: .top, spacing: 8) {
                 card(lhs, weather: weather)
+                    .frame(width: halfSide, height: halfSide)
                 card(rhs, weather: weather)
+                    .frame(width: halfSide, height: halfSide)
             }
         case .halfAlone(let kind):
             // Half width, not stretched: a lone half card sits beside empty space, as
             // it does in the Android grid.
-            HStack(alignment: .top, spacing: 12) {
+            HStack(alignment: .top, spacing: 8) {
                 card(kind, weather: weather)
+                    .frame(width: halfSide, height: halfSide)
                 Color.clear
             }
         }
@@ -213,9 +251,9 @@ struct ForecastScreen: View {
         case .pollen: PollenCard(weather: weather)
         case .wind: WindCard(weather: weather, units: appState.units)
         case .humidity: MetricHalfCard(title: "Humidity", icon: "humidity", lines: humidityLines(weather))
-        case .pressure: MetricHalfCard(title: "Pressure", icon: "gauge", lines: pressureLines(weather))
+        case .pressure: MetricHalfCard(title: "Pressure", icon: "gauge", lines: pressureLines(weather), shape: .circle)
         case .uv: MetricHalfCard(title: "UV index", icon: "sun.max", lines: uvLines(weather))
-        case .visibility: MetricHalfCard(title: "Visibility", icon: "eye", lines: visibilityLines(weather))
+        case .visibility: MetricHalfCard(title: "Visibility", icon: "eye", lines: visibilityLines(weather), shape: .circle)
         case .sun: SunCard(weather: weather)
         case .moon: MoonCard(weather: weather)
         case .clock: ClockCard(timeZone: weather.timeZone)
@@ -282,12 +320,32 @@ struct ForecastScreen: View {
 
     private func uvLines(_ weather: Weather) -> [String] {
         guard let uv = weather.current?.uvIndex else { return ["—"] }
-        return [String(format: "%.1f", uv)]
+        // Bands from `UV.kt`: <3 low, <6 moderate, <8 high, <11 very high, else extreme.
+        let level: String
+        switch uv {
+        case ..<3: level = "Low"
+        case ..<6: level = "Moderate"
+        case ..<8: level = "High"
+        case ..<11: level = "Very high"
+        default: level = "Extreme"
+        }
+        return [String(format: "%.1f", uv), level]
     }
 
     private func visibilityLines(_ weather: Weather) -> [String] {
         guard let visibility = weather.current?.visibility else { return ["—"] }
-        return [appState.units.string(visibility)]
+        // Thresholds from `UnitExtensions.kt` (metres).
+        let metres = visibility.inMeters
+        let quality: String
+        switch metres {
+        case ..<1_000: quality = "Very poor"
+        case ..<4_000: quality = "Poor"
+        case ..<10_000: quality = "Moderate"
+        case ..<20_000: quality = "Good"
+        case ..<40_000: quality = "Clear"
+        default: quality = "Perfectly clear"
+        }
+        return [appState.units.string(visibility), quality]
     }
 
     private func legacySunLines(_ weather: Weather) -> [String] {

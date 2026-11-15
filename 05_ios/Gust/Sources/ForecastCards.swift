@@ -33,28 +33,11 @@ extension Date {
 struct CardShell<Content: View>: View {
     let title: String?
     let icon: String?
+    var shape: CardShape = .extraLarge
     @ViewBuilder let content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if let title {
-                HStack(spacing: 6) {
-                    if let icon {
-                        Image(systemName: icon)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    Text(title)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .textCase(.uppercase)
-                }
-            }
-            content
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        BreezyCard(title: title, icon: icon, shape: shape) { content }
     }
 }
 
@@ -128,17 +111,17 @@ struct HeaderCard: View {
 
             if let condition = conditionText {
                 Text(condition)
-                    .font(.title3.weight(.semibold))
+                    .font(.system(size: 20, weight: .regular))
                     .accessibilityIdentifier("header.condition")
             }
 
             HStack(alignment: .top, spacing: 2) {
                 Text(temperatureValue)
-                    .font(.system(size: 92, weight: .bold, design: .rounded))
+                    .font(.system(size: 140, weight: .regular))
                     .accessibilityIdentifier("header.temperature")
                 Text(units.temperature == .fahrenheit ? "°F" : "°C")
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
-                    .padding(.top, 10)
+                    .font(.system(size: 50, weight: .regular))
+                    .padding(.top, 18)
             }
             .foregroundStyle(foreground)
             .accessibilityElement(children: .contain)
@@ -147,13 +130,13 @@ struct HeaderCard: View {
                feelsLike != weather.current?.temperature || feelsLike == nil {
                 // Narrow width in upstream's header: whole degrees.
                 Text("feels like " + units.degrees(feelsLike))
-                    .font(.headline.weight(.medium))
+                    .font(.system(size: 14))
                     .accessibilityIdentifier("header.feelsLike")
             }
 
             if let range = dayNightRange {
                 Text(range)
-                    .font(.subheadline)
+                    .font(.system(size: 14))
                     .padding(.top, 2)
                     .accessibilityIdentifier("header.dayNight")
             }
@@ -219,6 +202,7 @@ enum TrendTab: String, CaseIterable, Identifiable {
 struct HourlyCard: View {
     let weather: Weather
     let units: UnitPreferences
+    @Environment(\.colorScheme) private var scheme
     @State private var tab: TrendTab = .conditions
 
     private var hours: [HourlyForecast] {
@@ -236,12 +220,16 @@ struct HourlyCard: View {
                         ForEach(Array(hours.enumerated()), id: \.offset) { index, hour in
                             VStack(spacing: 3) {
                                 Text(index == 0 ? "Now" : hour.date.localTime(in: weather.timeZone))
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                                Image(systemName: symbolName(for: hour.weatherCode))
-                                    .font(.footnote)
+                                    .font(.system(size: 12))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.7)
+                                    .foregroundStyle(BreezyTheme.onSurfaceVariant(scheme))
+                                WeatherIcon(code: hour.weatherCode,
+                                            daylight: weather.isDaylight(at: hour.date),
+                                            size: 26)
                                 Text(value(for: hour))
-                                    .font(.caption.weight(.medium))
+                                    .font(.system(size: 14, weight: .medium))
+                                    .lineLimit(1)
                                 if tab == .conditions,
                                    let probability = hour.precipitationProbability,
                                    probability.inPercent >= 5 {
@@ -250,11 +238,11 @@ struct HourlyCard: View {
                                         .foregroundStyle(.blue)
                                 }
                             }
-                            .frame(width: 46)
+                            .frame(width: 54)
                         }
                     }
                     TrendChart(values: series, height: 56)
-                        .frame(width: 46 * CGFloat(hours.count))
+                        .frame(width: 54 * CGFloat(hours.count))
                 }
             }
             .accessibilityElement(children: .contain)
@@ -295,6 +283,7 @@ struct HourlyCard: View {
 
 struct TrendTabs: View {
     @Binding var selection: TrendTab
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         HStack(spacing: 6) {
@@ -303,19 +292,25 @@ struct TrendTabs: View {
                     selection = candidate
                 } label: {
                     Text(candidate.rawValue)
-                        .font(.caption2.weight(.semibold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .font(.system(size: 14, weight: .medium))
+                        .lineLimit(1)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
                         .background(
-                            selection == candidate ? Color.accentColor.opacity(0.16) : Color.clear,
+                            selection == candidate
+                                ? BreezyTheme.selectedTab
+                                : BreezyTheme.unselectedTab.opacity(scheme == .dark ? 0.18 : 1),
                             in: Capsule()
                         )
-                        .foregroundStyle(selection == candidate ? Color.accentColor : Color.secondary)
+                        .foregroundStyle(
+                            selection == candidate
+                                ? Color.white
+                                : BreezyTheme.onSurfaceVariant(scheme)
+                        )
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("tab.\(candidate.rawValue)")
             }
-            Spacer()
         }
     }
 }
@@ -372,50 +367,69 @@ struct DailyCard: View {
     var body: some View {
         CardShell(title: "Daily forecast", icon: "calendar") {
             TrendTabs(selection: $tab)
-            VStack(spacing: 6) {
-                ForEach(Array(weather.dailyForecast.enumerated()), id: \.offset) { index, day in
-                    HStack(spacing: 8) {
-                        Text(index == 0 ? "Today" : day.date.shortWeekday(in: weather.timeZone))
-                            .font(.footnote)
-                            .frame(width: 54, alignment: .leading)
-                        switch tab {
-                        case .conditions:
-                            Image(systemName: symbolName(for: dominantCode(day, index: index)))
-                                .font(.caption)
-                                .frame(width: 20)
-                                .accessibilityHidden(true)
-                            Text(minText(day))
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                                .frame(width: 46, alignment: .trailing)
-                            TemperatureBar(day: day, allDays: weather.dailyForecast)
-                                .frame(height: 4)
-                            Text(maxText(day))
-                                .font(.footnote.weight(.medium))
-                                .frame(width: 46, alignment: .leading)
-                        case .airQuality:
-                            Text("AQI")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            Text(airQualityText(day))
-                                .font(.footnote.weight(.medium))
-                                .foregroundStyle(.secondary)
-                        case .wind:
-                            Text("Wind")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            Text(windText(day))
-                                .font(.footnote.weight(.medium))
+            // Upstream's daily block is a horizontally scrolling `TrendRecyclerView`
+            // with one 67dp column per day, not a list of rows: the chart runs under
+            // the columns and the columns scroll sideways.
+            ScrollView(.horizontal, showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 0) {
+                        ForEach(Array(weather.dailyForecast.enumerated()), id: \.offset) { index, day in
+                            VStack(spacing: 4) {
+                                Text(index == 0 ? "Today" : day.date.shortWeekday(in: weather.timeZone))
+                                    .font(.system(size: 14))
+                                    // Leaf identifiers only: a container identifier is
+                                    // not addressable unless the container is itself an
+                                    // accessibility element.
+                                    .accessibilityIdentifier("daily.row.\(index)")
+                                Text(day.date.formatted(Date.FormatStyle(timeZone: weather.timeZone).day()))
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(BreezyTheme.onSurfaceVariant(scheme))
+                                WeatherIcon(code: dominantCode(day, index: index),
+                                            daylight: true,
+                                            size: 30)
+                                switch tab {
+                                case .conditions:
+                                    Text(maxText(day))
+                                        .font(.system(size: 15, weight: .medium))
+                                    Text(minText(day))
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(BreezyTheme.onSurfaceVariant(scheme))
+                                case .airQuality:
+                                    Text(airQualityText(day)).font(.system(size: 15, weight: .medium))
+                                case .wind:
+                                    Text(windText(day)).font(.system(size: 15, weight: .medium))
+                                }
+                            }
+                            .frame(width: 67)
                         }
                     }
-                    .accessibilityIdentifier("daily.row.\(index)")
+                    TrendChart(values: dailySeries, height: 60)
+                        .frame(width: 67 * CGFloat(weather.dailyForecast.count))
                 }
             }
         }
-        // No container identifier here: it merges the per-row identifiers
-        // ("daily.row.0-daily.row.0-…"). The card is addressable as cardLink.daily.
+        // No container identifier here: it merges the per-column identifiers
+        // ("daily.row.0-…"). The card is addressable as cardLink.daily.
+    }
+
+    @Environment(\.colorScheme) private var scheme
+
+    private var dailySeries: [Double] {
+        weather.dailyForecast.map { day in
+            switch tab {
+            case .conditions:
+                guard let high = day.temperatureMax else { return 0 }
+                return units.temperature == .fahrenheit ? high.inFahrenheit : high.inCelsius
+            case .airQuality:
+                return Double(airQualityText(day)) ?? 0
+            case .wind:
+                guard let peak = weather.hourlyForecast
+                    .filter({ Calendar(identifier: .gregorian).isDate($0.date, inSameDayAs: day.date) })
+                    .compactMap({ $0.wind?.speed })
+                    .max(by: { $0.inMetersPerSecond < $1.inMetersPerSecond }) else { return 0 }
+                return units.speed == .milesPerHour ? peak.inMilesPerHour : peak.inKilometersPerHour
+            }
+        }
     }
 
     /// The day's weather at the hour this card starts, which is what upstream's icon
@@ -494,21 +508,52 @@ struct MetricHalfCard: View {
     let title: String
     let icon: String
     let lines: [String]
+    var shape: CardShape = .extraLarge
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
-        CardShell(title: title, icon: icon) {
+        CardShell(title: title, icon: icon, shape: shape) {
             VStack(alignment: .leading, spacing: 2) {
-                ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
-                    Text(line)
-                        .font(index == 0 ? .title3.weight(.regular) : .caption)
-                        .foregroundStyle(index == 0 ? .primary : .secondary)
+                // Upstream splits a block's number from its unit ("1,022" + "hPa"), so
+                // the number can be 45sp without the unit forcing it to shrink.
+                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                    Text(number)
+                        .font(.system(size: 45, weight: .regular))
+                        .foregroundStyle(BreezyTheme.onSurface(scheme))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                    if let unit {
+                        Text(unit)
+                            .font(.system(size: 20, weight: .regular))
+                            .foregroundStyle(BreezyTheme.onSurface(scheme))
+                    }
+                }
+                if let secondary {
+                    BlockSecondary(text: secondary)
                 }
             }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("card.\(title.lowercased())")
     }
+
+    /// "1008.0 hPa" → ("1008.0", "hPa"); "54 %" → ("54", "%"); "0.1" → ("0.1", nil).
+    private var split: (String, String?) {
+        guard let first = lines.first else { return ("—", nil) }
+        guard let space = first.lastIndex(of: " ") else { return (first, nil) }
+        let unit = String(first[first.index(after: space)...])
+        guard unit.contains(where: \.isLetter) || unit == "%" else { return (first, nil) }
+        return (String(first[..<space]), unit)
+    }
+
+    private var number: String { split.0 }
+    private var unit: String? { split.1 }
+    private var secondary: String? {
+        let rest = lines.dropFirst().filter { !$0.isEmpty }
+        return rest.isEmpty ? nil : rest.joined(separator: " · ")
+    }
 }
+
 // MARK: - Precipitation
 
 /// Nowcast strip: the next two hours in 15-minute steps, drawn with `Canvas`
@@ -588,12 +633,8 @@ struct PrecipitationCard: View {
     var body: some View {
         CardShell(title: "Precipitation", icon: "drop") {
             VStack(alignment: .leading, spacing: 2) {
-                Text(valueText)
-                    .font(.title3.weight(.regular))
-                Text(labelText)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                BlockValue(text: valueText)
+                BlockSecondary(text: labelText)
             }
         }
         .accessibilityElement(children: .contain)
@@ -619,18 +660,22 @@ struct PrecipitationCard: View {
 
 struct SunCard: View {
     let weather: Weather
+    @Environment(\.colorScheme) private var scheme
 
     private var today: DailyForecast? { weather.dailyForecast.first }
 
     var body: some View {
         CardShell(title: "Sun", icon: "sunrise") {
-            VStack(alignment: .leading, spacing: 4) {
-                row("rise", today?.sunrise)
-                row("set", today?.sunset)
+            VStack(alignment: .leading, spacing: 6) {
+                AstroArc(
+                    progress: progress,
+                    marker: AnyView(Image(systemName: "sun.max.fill").foregroundStyle(.orange)),
+                    leading: today?.sunrise.map { $0.localTime(in: weather.timeZone) } ?? "—",
+                    trailing: today?.sunset.map { $0.localTime(in: weather.timeZone) } ?? "—"
+                )
                 if let daylight = today?.daylightDuration {
-                    Text(String(format: "%.0f h %02.0f", floor(daylight / 3600), (daylight / 60).truncatingRemainder(dividingBy: 60)))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    BlockSecondary(text: String(format: "%.0f h %02.0f min", floor(daylight / 3600),
+                                                (daylight / 60).truncatingRemainder(dividingBy: 60)))
                 }
             }
         }
@@ -638,14 +683,55 @@ struct SunCard: View {
         .accessibilityIdentifier("card.sun")
     }
 
-    private func row(_ label: String, _ date: Date?) -> some View {
-        HStack(spacing: 6) {
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Spacer()
-            Text(date.map { $0.localTime(in: weather.timeZone) } ?? "—")
-                .font(.callout.weight(.medium))
+    /// Where the sun is between rise and set, 0…1; nil outside daylight.
+    private var progress: Double? {
+        guard let rise = today?.sunrise, let set = today?.sunset, set > rise else { return nil }
+        let now = weather.current?.date ?? weather.refreshTime
+        let fraction = now.timeIntervalSince(rise) / set.timeIntervalSince(rise)
+        return min(max(fraction, 0), 1)
+    }
+}
+
+/// Upstream draws a dashed semicircle with a marker for the current position
+/// (`DetailsSunMoon`): the arc is the day, the marker is "now".
+struct AstroArc: View {
+    let progress: Double?
+    let marker: AnyView
+    let leading: String
+    let trailing: String
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        VStack(spacing: 2) {
+            GeometryReader { geometry in
+                let size = geometry.size
+                let radius = min(size.width / 2, size.height) - 6
+                let center = CGPoint(x: size.width / 2, y: size.height - 4)
+
+                Path { path in
+                    path.addArc(center: center, radius: radius,
+                                startAngle: .degrees(180), endAngle: .degrees(360), clockwise: false)
+                }
+                .stroke(style: StrokeStyle(lineWidth: 1.5, dash: [4, 4]))
+                .foregroundStyle(BreezyTheme.onSurfaceVariant(scheme).opacity(0.55))
+
+                if let progress {
+                    let angle = Double.pi * (1 + progress)
+                    marker
+                        .font(.system(size: 16))
+                        .position(x: center.x + radius * cos(angle),
+                                  y: center.y + radius * sin(angle))
+                }
+            }
+            .frame(height: 54)
+
+            HStack {
+                Text(leading)
+                Spacer()
+                Text(trailing)
+            }
+            .font(.system(size: 14))
+            .foregroundStyle(BreezyTheme.onSurfaceVariant(scheme))
         }
     }
 }
@@ -659,16 +745,13 @@ struct MoonCard: View {
 
     var body: some View {
         CardShell(title: "Moon", icon: "moon") {
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Image(systemName: phase.symbolName)
-                        .foregroundStyle(.secondary)
-                    Text(String(format: "%.0f %%", phase.illumination * 100))
-                        .font(.title3.weight(.regular))
-                }
-                Text(phase.name)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 6) {
+                AstroArc(
+                    progress: phase.illumination,
+                    marker: AnyView(Image(systemName: phase.symbolName).foregroundStyle(.secondary)),
+                    leading: String(format: "%.0f %%", phase.illumination * 100),
+                    trailing: phase.name
+                )
             }
         }
         .accessibilityElement(children: .contain)
@@ -726,7 +809,7 @@ struct AirQualityCard: View {
 
     var body: some View {
         let quality = weather.airQuality(near: weather.current?.date ?? Date())
-        CardShell(title: "Air quality", icon: "aqi.medium") {
+        CardShell(title: "Air quality", icon: "aqi.medium", shape: .circle) {
             HStack(alignment: .center, spacing: 12) {
                 ZStack {
                     Circle()
@@ -737,13 +820,13 @@ struct AirQualityCard: View {
                         .rotationEffect(.degrees(-90))
                     VStack(spacing: 0) {
                         Text(quality?.index.map(String.init) ?? "—")
-                            .font(.title2.weight(.semibold))
+                            .font(.system(size: 45, weight: .regular))
                         Text(levelName(quality?.index))
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
                 }
-                .frame(width: 84, height: 84)
+                .frame(width: 120, height: 120)
 
                 VStack(alignment: .leading, spacing: 3) {
                     if let pm25 = quality?.concentration(of: .pm25) {
@@ -804,14 +887,17 @@ struct AirQualityCard: View {
 struct WindCard: View {
     let weather: Weather
     let units: UnitPreferences
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         let wind = weather.current?.wind
-        CardShell(title: "Wind", icon: "wind") {
+        CardShell(title: "Wind", icon: "wind", shape: .circle) {
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
                     Text(units.string(wind?.speed))
-                        .font(.title3.weight(.regular))
+                        .font(.system(size: 26, weight: .regular))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
                         .accessibilityIdentifier("wind.speed")
                     if let degree = wind?.direction {
                         // Upstream rotates an arrow so its head points where the wind
@@ -823,8 +909,9 @@ struct WindCard: View {
                     }
                 }
                 Text(detail(wind))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 14))
+                    .foregroundStyle(BreezyTheme.onSurfaceVariant(scheme))
+                    .lineLimit(2)
                     .accessibilityIdentifier("wind.detail")
             }
         }
@@ -862,9 +949,8 @@ struct PollenCard: View {
         CardShell(title: "Pollen", icon: "leaf") {
             if weather.pollen.isEmpty {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("—").font(.title3.weight(.regular))
-                    Text("no coverage here").font(.caption).foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                    BlockValue(text: "—")
+                    BlockSecondary(text: "no coverage here")
                 }
             } else if let worst = pollen?.worstType, worst.index > 0 {
                 HStack(alignment: .center, spacing: 8) {

@@ -191,3 +191,27 @@ a test pins the box corners.
 | 21 | Detail pages omit deviation-from-normal, the "Normal" reference lines and degree days | All three need a 30-year climatology. A fabricated baseline would be worse than their absence. | Yes, with a climate data set |
 | 22 | Main screen hides Notifications and External modules rows entirely | No iOS equivalent in this port (see SCOPE.md). An empty screen implying the feature exists would be dishonest. | No |
 | 23 | Day/night split for precipitation uses upstream's fixed 05:00/17:00 boundary, not sunrise/sunset | That is what upstream does; matching it keeps the card and the detail panel consistent. | Yes |
+| 24 | App bar uses a material blur, not the weather colour | Upstream paints the bar in the weather colour. SwiftUI ignores a `toolbarBackground` colour that is derived from data loaded after the bar is built, so the bar cannot follow the forecast on iOS 17. | Yes, on iOS 18 with `toolbarBackgroundVisibility` and a bar colour resolved before first paint |
+
+## The visual layer, taken from the layouts rather than approximated
+
+The first pass rendered Material-*ish* cards: rounded rectangles everywhere, iOS tab bar, SF
+Symbols for weather, one row per forecast day. It was wrong in every one of those four places, and
+the layouts say so:
+
+| Thing | Where upstream decides it | What the port now does |
+|---|---|---|
+| Card corner | `res/layout/container_main_*.xml`, `app:shapeAppearance` | Two shapes only: `Corner.ExtraLarge` (28dp) for header-adjacent blocks, `Corner.Full` (a circle) for air quality, pressure, visibility and wind. Everything else in between was invented. |
+| Half-size cell height | `dimensionRatio="1:1"` on the circular containers | Each half card is framed to a square, so a rect card and a circle beside it stand the same height. |
+| Big number | `styles.xml` `Weather.TextAppearance.MainBlock.NumberDigit` | 45pt number with the unit as a separate 20pt label beside it — never in the same string. |
+| Card title | `title_icon` + `title`, `textAppearanceLabelLarge`, `colorSurfaceInverse` | 16pt bold sentence-case title with a 15pt icon to its left. |
+| Weather artwork | `Constants.getResourcesName(code) + "_" + day|night` resolved through `res/xml/icon_provider_drawable_filter.xml` | The 85 `weather_*.png` files ship unchanged; `WeatherIcons` reproduces the filter (only `clear` and `partly_cloudy` split day/night) and a test asserts every produced name has a file. |
+| Daily block | `DailyViewHolder` + `trend_item_width` 67dp | A horizontally scrolling strip of 67pt columns (weekday, date, icon, high, low) over a shared trend chart, with the Conditions / Air quality / Wind tabs. Not a list of rows. |
+| Sun and moon | `DetailsSunMoon` | A dashed semicircle with the body marker at its current position, rise/set under each end. |
+| Navigation | `activity_main.xml`: up-button + edit + open-in-another-app; no bottom navigation | No tab bar. The place list is behind the top-left button, settings and licences behind the overflow. `AppFlowTests` asserts `app.tabBars.count == 0`. |
+
+Two things the port cannot copy, and does not pretend to: the app bar in upstream is tinted with the
+weather colour, and SwiftUI will not take a colour that arrives after the bar is built (`toolbarBackground`
+with a value derived from the loaded forecast renders as the system default), so the bar is a material
+blur over the same backdrop; and the header has no weather artwork upstream, so the port's header has
+none either.

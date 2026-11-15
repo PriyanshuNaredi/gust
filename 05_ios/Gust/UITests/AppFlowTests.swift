@@ -23,17 +23,33 @@ final class AppFlowTests: XCTestCase {
         app.descendants(matching: .any).matching(identifier: id).firstMatch
     }
 
-    func testTabsArePresentAndSwitch() {
+    /// Upstream has no tab bar: the place list is behind the top-left button and
+    /// settings behind the overflow menu. This test is the guard against a port
+    /// quietly reintroducing iOS chrome the original never had.
+    func testNavigationLivesInTheAppBar() {
         let app = launch()
         XCTAssertTrue(app.staticTexts["header.temperature"].waitForExistence(timeout: 30))
 
-        app.tabBars.buttons["Locations"].tap()
+        XCTAssertEqual(app.tabBars.count, 0, "the original has no tab bar")
+
+        openLocations(app)
         XCTAssertTrue(app.navigationBars["Locations"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Berlin"].exists)
+        app.buttons["Done"].tap()
 
-        app.tabBars.buttons["Settings"].tap()
+        openSettings(app)
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 5))
         XCTAssertTrue(anyElement(app, "settings.appearance").exists)
+        app.buttons["settings.done"].tap()
+    }
+
+    private func openSettings(_ app: XCUIApplication) {
+        app.buttons["header.more"].tap()
+        app.buttons["Settings"].tap()
+    }
+
+    private func openLocations(_ app: XCUIApplication) {
+        app.buttons["header.menu"].tap()
     }
 
     func testTappingHourlyCardOpensDetail() {
@@ -64,7 +80,7 @@ final class AppFlowTests: XCTestCase {
             NSPredicate(format: "label CONTAINS 'feels like'")
         ).firstMatch.label
 
-        app.tabBars.buttons["Settings"].tap()
+        openSettings(app)
         let appearance = anyElement(app, "settings.appearance")
         XCTAssertTrue(appearance.waitForExistence(timeout: 10), "Appearance row missing")
         appearance.tap()
@@ -73,7 +89,12 @@ final class AppFlowTests: XCTestCase {
         picker.tap()
         app.buttons["Fahrenheit (°F)"].tap()
 
-        app.tabBars.buttons["Weather"].tap()
+        // Back out of the pushed Appearance page first: the Done button belongs to the
+        // sheet's root bar, which the pushed page replaces.
+        // Scoped to the pushed page: an unscoped query finds the main screen's bar,
+        // which the sheet is covering.
+        app.navigationBars["Appearance"].buttons.firstMatch.tap()
+        app.buttons["settings.done"].tap()
         XCTAssertTrue(header.waitForExistence(timeout: 15))
         XCTAssertTrue(app.staticTexts["°F"].waitForExistence(timeout: 10), "unit beside the header did not follow the setting")
 
@@ -89,7 +110,7 @@ final class AppFlowTests: XCTestCase {
         let app = launch()
         XCTAssertTrue(app.staticTexts["header.temperature"].waitForExistence(timeout: 30))
 
-        app.tabBars.buttons["Locations"].tap()
+        openLocations(app)
         anyElement(app, "locations.add").tap()
 
         let field = app.searchFields.firstMatch
@@ -107,7 +128,7 @@ final class AppFlowTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Paris"].waitForExistence(timeout: 10), "added place not listed")
 
         // The forecast must follow the selection.
-        app.tabBars.buttons["Weather"].tap()
+        app.buttons["Done"].tap()
         XCTAssertTrue(app.staticTexts["Paris"].waitForExistence(timeout: 30), "main screen did not switch place")
     }
 }
