@@ -210,6 +210,8 @@ struct SettingsScreen: View {
                 }
 
                 Section("About") {
+                    NavigationLink("Licences and notices") { LicencesScreen() }
+                        .accessibilityIdentifier("settings.licences")
                     LabeledContent("App", value: "Gust")
                     LabeledContent("Port of", value: "Breezy Weather 6.2.2")
                     LabeledContent("Licence", value: "LGPL-3.0")

@@ -1,0 +1,31 @@
+Gust — an iOS port of Breezy Weather
+====================================
+
+This application is a port of Breezy Weather 6.2.2 to iOS. It is an independent
+project, not affiliated with or endorsed by the Breezy Weather authors.
+
+Upstream:
+  Breezy Weather — https://github.com/breezy-weather/breezy-weather
+  Copyright the Breezy Weather contributors.
+  Licensed under the GNU Lesser General Public License, version 3.0.
+  Additional terms apply: see BREEZY_LICENSE_ADDITIONAL.txt.
+
+This port:
+  Copyright 2026 the Gust contributors.
+  Licensed under the GNU Lesser General Public License, version 3.0.
+  Ported source files retain their upstream notices and identify the upstream file
+  they came from.
+
+Weather data:
+  Open-Meteo — https://open-meteo.com
+  Licensed under CC BY 4.0. Air quality data originates from CAMS.
+
+Not included:
+  No Breezy Weather artwork, fonts or signing keys are redistributed. The app icon
+  is original to this project. The name "Breezy Weather" is used only to describe
+  what this software is a port of, never as a product name.
+
+Boundaries:
+  The port implements a subset of the upstream feature set. Features that depend on
+  Android-only platform services (live wallpaper, RemoteViews widgets, boot
+  receivers, foreground services, cross-app icon packs) are intentionally absent.

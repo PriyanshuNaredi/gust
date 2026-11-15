@@ -161,3 +161,17 @@ marked as a modified/derived version rather than passed off as Breezy Weather it
 Ported exactly, for the record: the y-scale is **absolute** (bottom at "heavy", 15 mm/h), not
 normalised to the window's peak — a drizzle must stay small, as it does on Android. Thresholds are
 per hour, so a 15-minute accumulation is multiplied by 3600/900 before comparison.
+
+## Deviations added by the astronomy and app-shell slices
+
+| # | Deviation | Reason | Reversible? |
+|---|---|---|---|
+| 14 | Daily request appends `sunrise,sunset` (23 daily variables, upstream sends 21) | Upstream never asks for them, so Breezy's sun card is empty with Open-Meteo. Real times beat a hand-rolled solar algorithm. | Yes — drop two variables |
+| 15 | Moon phase computed locally; no moonrise/moonset | Open-Meteo serves no moon data. A mean-synodic model is good to a few hours: fine for illumination, useless for a rise time. | Yes, with a real ephemeris |
+| 16 | Saved places persist to `Application Support/Gust/places.json`; preferences to `UserDefaults` | Upstream uses Room; a JSON file and one defaults key are the honest minimum for a port this size. | Yes |
+| 17 | Place search uses Open-Meteo geocoding | Upstream uses Android's `Geocoder` or a bundled city list. The geocoding service needs no key and carries IANA zones. | Yes |
+| 18 | Detail pages show one series per metric card | Upstream's detail screens are per-element pages with sliders and comparisons between locations. This port keeps the chart and the values, drops the comparisons. | Yes |
+
+Ported exactly in these slices: the eight-name moon-phase vocabulary, the
+`max(O3, NO2, PM10, PM25)` index rule, Beaufort integer bands, the location's time zone applied to
+every displayed time, and the LGPL/notice obligations (bundled, reachable in Settings).

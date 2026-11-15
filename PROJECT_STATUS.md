@@ -19,7 +19,11 @@ subset and `02_parity/PARITY_SPEC.md` for what exactly.
 | 3 | Parity spec | **signed off** (Option A + defaults) | `02_parity/PARITY_SPEC.md` |
 | 4 | Scaffolding | **done** — app builds, installs, launches, links the package; UI gate green | `05_ios/Gust/`, `07_logs/shots/shell-launch.png` |
 | 5 | Data layer | **done**: units, Open-Meteo request/response/mapping/client, hourly/daily/minutely models | 40 logic tests, 0 failures |
-| 6 | Main screen | **in progress**: header, nowcast (Canvas), daily, hourly, 8 half cards incl. air quality | 5 UI tests, 0 failures |
+| 6 | Main screen | **done**: header, nowcast, daily, hourly, 10 half/full cards, footer | UI tests green |
+| 7 | Detail pages | **done**: hourly, daily, per-metric series, air quality (Canvas) | UI tests green |
+| 8 | Locations + search | **done**: saved places, geocoding search, persistence | 10 UI tests green |
+| 9 | Settings | **done**: five unit pickers wired to live formatting, licences screen | UI tests green |
+| 10 | Release | **done**: unsigned IPA + CI workflow | `ipa-build.sh` verifies bundle, version keys, licences, platform |
 | 6 | UI port | not started | — |
 | 7 | Custom rendering (charts) | not started | — |
 | 8 | Verification | not started | — |

@@ -1,0 +1,50 @@
+name: Unsigned IPA
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Package tests
+        run: |
+          set -o pipefail
+          cd 05_ios/BreezyUnits
+          swift test 2>&1 | tee /tmp/logic.log
+          # A test run that executes nothing must fail the build.
+          grep -qE "Executed [0-9]+ tests" /tmp/logic.log || { echo "no tests executed"; exit 1; }
+
+      - name: Build unsigned IPA
+        run: ./07_tools/ipa-build.sh "${GITHUB_REF_NAME#v}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gust-unsigned-ipa
+          path: 06_release/*.ipa
+          if-no-files-found: error
+
+      - name: Attach IPA to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: 06_release/*.ipa
+          body: |
+            Unsigned IPA of Gust — a port of Breezy Weather 6.2.2.
+
+            Install with SideStore (<https://sidestore.io/>) or LiveContainer
+            (<https://github.com/LiveContainer/LiveContainer>). No Apple account is
+            involved in building this file; signing is up to the installer.
