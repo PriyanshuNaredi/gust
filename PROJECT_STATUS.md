@@ -18,16 +18,13 @@ subset and `02_parity/PARITY_SPEC.md` for what exactly.
 | 2 | Source recovery | **done** | upstream at tag `v6.2.2` + `recon/` for the binary's own facts |
 | 3 | Parity spec | **signed off** (Option A + defaults) | `02_parity/PARITY_SPEC.md` |
 | 4 | Scaffolding | **done** — app builds, installs, launches, links the package; UI gate green | `05_ios/Gust/`, `07_logs/shots/shell-launch.png` |
-| 5 | Data layer | **done**: units, Open-Meteo forecast + air quality + geocoding, hourly/daily/minutely/pollen models | 80 logic tests, 0 failures |
+| 5 | Data layer | **done**: units, Open-Meteo forecast + air quality + geocoding, hourly/daily/minutely/pollen models | 96 logic tests, 0 failures |
 | 6 | Main screen | **done**: header, nowcast, daily, hourly, 10 half/full cards, footer | UI tests green |
 | 7 | Detail pages | **done**: hourly, daily, per-metric series, air quality (Canvas) | UI tests green |
 | 8 | Locations + search | **done**: saved places, geocoding search, persistence | 10 UI tests green |
-| 9 | Settings | **done**: five unit pickers wired to live formatting, licences screen | UI tests green |
+| 9 | Settings | **done**: upstream's structure — background updates, appearance, main screen, location, sources, debug, licences | UI tests green |
 | 10 | Release | **done**: unsigned IPA + CI workflow | `ipa-build.sh` verifies bundle, version keys, licences, platform |
-| 6 | UI port | not started | — |
-| 7 | Custom rendering (charts) | not started | — |
-| 8 | Verification | not started | — |
-| 9 | Release (unsigned IPA) | not started | — |
+| 6b | UI parity pass | **done**: weather backdrop, upstream header, trend tabs, AQ ring, wind arrow, pollen levels, day/night precipitation, detail date selector | screenshots in `07_logs/shots/` |
 
 ## Confirmed scope defaults (2026-11-15)
 
@@ -100,3 +97,22 @@ first, minutely-when-absent behaviour.
 3. **Units.** A whole module ports 1:1, but it is 35 files with formatting edge cases
    (numeral systems, decimals, separators) — the largest *cheap* win if done first.
 4. **Copy.** English-only still means several hundred strings; they come from `strings.xml`.
+
+## Where the port stands
+
+| Area | State |
+|---|---|
+| Main screen | 15 of upstream's 17 card kinds. Missing: alert (no source supplies alerts here) and the footer variant for multiple providers |
+| Details | 8 pages via `Canvas`; deviation-from-normal and degree days need a climatology (deviation 21) |
+| Locations / search | complete for one provider |
+| Settings | complete for what iOS can honour; notifications and widgets out (deviation 22) |
+| Release | unsigned IPA verified by `ipa-build.sh`; CI present, unpushed |
+| Tests | 96 package + 10 UI, all green |
+
+### Known gaps, all deliberate
+
+1. **Alerts** — Breezy shows them only when a provider sends them; Open-Meteo does not. The card
+   exists in `CardLayout` and would appear if a source ever produced one.
+2. **Climatology** — no deviation, "Normal" lines or degree days.
+3. **Notifications, widgets, live wallpaper** — Android-only.
+4. **Physical-device install** — needs an Apple ID and a signed build; the IPA is unsigned by design.
