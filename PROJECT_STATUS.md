@@ -19,7 +19,7 @@ subset and `02_parity/PARITY_SPEC.md` for what exactly.
 | 3 | Parity spec | **signed off** (Option A + defaults) | `02_parity/PARITY_SPEC.md` |
 | 4 | Scaffolding | **done** — app builds, installs, launches, links the package; UI gate green | `05_ios/Gust/`, `07_logs/shots/shell-launch.png` |
 | 5 | Data layer | **done**: units, Open-Meteo request/response/mapping/client, hourly/daily/minutely models | 40 logic tests, 0 failures |
-| 6 | Main screen | **in progress**: card stack with the ported half/full rule; header, hourly, daily, 7 half cards incl. air quality | 5 UI tests, 0 failures |
+| 6 | Main screen | **in progress**: header, nowcast (Canvas), daily, hourly, 8 half cards incl. air quality | 5 UI tests, 0 failures |
 | 6 | UI port | not started | — |
 | 7 | Custom rendering (charts) | not started | — |
 | 8 | Verification | not started | — |
@@ -64,6 +64,15 @@ on Android's `MeasureUnit`, so it belongs with the formatting layer, not the ari
 | AQI keeps going linearly above the last breakpoint | `PollutantIndex.getIndex` | A clamp looks safer and diverges on polluted days. |
 | Air quality is a separate host, 7 days, no models / no windspeed_unit | `OpenMeteoAirQualityApi` | Copying the forecast request returns nothing. |
 
+## Deviations added by the card-stack slice
+
+11. Nowcast charts three hours, not upstream's whole series (17 days at 0.2 pt/bar is unreadable).
+12. The window moves to the first wet step and says "from HH:MM", so the title and the picture agree.
+13. Precipitation card shows one "today" total; day/night halves wait for the astronomy slice.
+
+Ported exactly: absolute y-scale to the heavy threshold (never normalised), per-hour intensity from
+15-minute accumulation, and the three-case nowcast law from the first and last step only.
+
 ## Bugs found in my own tooling (worth keeping)
 
 | Bug | Symptom | Fix |
@@ -72,6 +81,7 @@ on Android's `MeasureUnit`, so it belongs with the formatting layer, not the ari
 | `simctl launch` on a running app | pid unchanged, screenshot showed stale UI twice in a row | terminate + uninstall + install + launch when verifying a new build |
 | `grep … && { exit 1; }` under `set -e` | tests passed silently with no output at all | use `if grep …; then` |
 | `out=$(failing cmd)` under `set -e` | failing UI run printed nothing, exit 65 only | capture `rc=$?` explicitly, then report |
+| Title derived from the whole series, chart drawn from a fixed window | "Rain starting" over an empty strip | move the window, label it, and unit-test that a non-`.none` state always has a wet bar |
 | container `.accessibilityIdentifier` | UI test waited 30 s for a label that existed, because every descendant had been renamed | `.accessibilityElement(children: .contain)` first; when a query fails, dump `app.debugDescription` before editing assertions |
 
 ## Open decisions
