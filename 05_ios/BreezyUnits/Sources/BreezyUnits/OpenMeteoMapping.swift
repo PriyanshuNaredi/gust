@@ -120,7 +120,9 @@ public extension OpenMeteoMapping {
                 cloudCoverMin: value(raw.cloudCoverMin).map { Double($0).percent },
                 visibilityMean: value(raw.visibilityMean).map { $0.meters },
                 visibilityMax: value(raw.visibilityMax).map { $0.meters },
-                visibilityMin: value(raw.visibilityMin).map { $0.meters }
+                visibilityMin: value(raw.visibilityMin).map { $0.meters },
+                sunrise: value(raw.sunrise).map { date(fromUnixSeconds: $0) },
+                sunset: value(raw.sunset).map { date(fromUnixSeconds: $0) }
             )
         }
     }
@@ -175,6 +177,9 @@ public extension OpenMeteoMapping {
             hourlyForecast: result.hourly.map { hourly(from: $0) } ?? [],
             dailyForecast: result.daily.map { daily(from: $0, timeZone: zone) } ?? [],
             minutelyForecast: minutely(from: result.minutelyFifteen),
+            /// The service reports the zone it resolved `timezone=auto` to; that is
+            /// the zone every displayed time belongs in.
+            timeZone: zone,
             refreshTime: refreshedAt
         )
     }

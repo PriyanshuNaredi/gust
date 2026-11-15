@@ -14,6 +14,7 @@
 		A6E1F48EFC1D5769023108FC /* ShellTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A3973CD73E2C09C85540D58 /* ShellTests.swift */; };
 		AAAF1D3333CACEF4645645FC /* ForecastCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78D64056B64DB9AFD5B17D34 /* ForecastCards.swift */; };
 		AB4BDF90FC516D2FA11DAF34 /* ForecastStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CECB9F19923C1D75F79FB8E /* ForecastStore.swift */; };
+		AC6D9683DE5E6F122400C653 /* LocalTimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FC2C95849ECCC53FD8DEDE9 /* LocalTimeTests.swift */; };
 		EBB34CF4CF2739C9F6C4CD81 /* BreezyUnits in Frameworks */ = {isa = PBXBuildFile; productRef = 646D6B6CAAF2A909E06711D4 /* BreezyUnits */; };
 /* End PBXBuildFile section */
 
@@ -30,6 +31,7 @@
 /* Begin PBXFileReference section */
 		3CECB9F19923C1D75F79FB8E /* ForecastStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastStore.swift; sourceTree = "<group>"; };
 		5A3973CD73E2C09C85540D58 /* ShellTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellTests.swift; sourceTree = "<group>"; };
+		6FC2C95849ECCC53FD8DEDE9 /* LocalTimeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalTimeTests.swift; sourceTree = "<group>"; };
 		7211111497C2E2478DB2330B /* GustApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GustApp.swift; sourceTree = "<group>"; };
 		76BB2FDF1E31D9C4BE3C9ECC /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		78D64056B64DB9AFD5B17D34 /* ForecastCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastCards.swift; sourceTree = "<group>"; };
@@ -77,6 +79,7 @@
 			isa = PBXGroup;
 			children = (
 				B06D370F365930430E8F62EA /* ForecastUITests.swift */,
+				6FC2C95849ECCC53FD8DEDE9 /* LocalTimeTests.swift */,
 				5A3973CD73E2C09C85540D58 /* ShellTests.swift */,
 			);
 			path = UITests;
@@ -200,6 +203,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				95AEBF81116FDEE2DC934B5A /* ForecastUITests.swift in Sources */,
+				AC6D9683DE5E6F122400C653 /* LocalTimeTests.swift in Sources */,
 				A6E1F48EFC1D5769023108FC /* ShellTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

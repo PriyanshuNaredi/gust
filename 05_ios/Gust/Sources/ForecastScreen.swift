@@ -23,7 +23,8 @@ struct ForecastScreen: View {
         // DAILY, HOURLY, then the half-size cards. Daily before hourly is not a
         // mistake here -- it is what the Android main screen does.
         .header, .precipitationNowcast, .daily, .hourly,
-        .precipitation, .wind, .airQuality, .humidity, .uv, .visibility, .pressure, .sun
+        .precipitation, .wind, .airQuality, .humidity, .uv, .visibility, .pressure,
+        .sun, .moon, .clock, .footer
     ]
 
     var body: some View {
@@ -81,7 +82,7 @@ struct ForecastScreen: View {
     private func card(_ kind: MainCardKind, weather: Weather) -> some View {
         switch kind {
         case .header: HeaderCard(weather: weather, place: store.placeName)
-        case .precipitationNowcast: NowcastCard(nowcast: Nowcast(steps: weather.minutelyForecast))
+        case .precipitationNowcast: NowcastCard(nowcast: Nowcast(steps: weather.minutelyForecast), zone: weather.timeZone)
         case .precipitation: PrecipitationCard(weather: weather)
         case .hourly: HourlyCard(weather: weather)
         case .daily: DailyCard(weather: weather)
@@ -91,7 +92,10 @@ struct ForecastScreen: View {
         case .pressure: MetricHalfCard(title: "Pressure", icon: "gauge", lines: pressureLines(weather))
         case .uv: MetricHalfCard(title: "UV index", icon: "sun.max", lines: uvLines(weather))
         case .visibility: MetricHalfCard(title: "Visibility", icon: "eye", lines: visibilityLines(weather))
-        case .sun: MetricHalfCard(title: "Sunshine", icon: "sunrise", lines: sunLines(weather))
+        case .sun: SunCard(weather: weather)
+        case .moon: MoonCard(weather: weather)
+        case .clock: ClockCard(timeZone: weather.timeZone)
+        case .footer: FooterCard(weather: weather, place: store.placeName)
         default:
             // Cards not ported yet render as nothing rather than as an empty box.
             EmptyView()
@@ -146,7 +150,7 @@ struct ForecastScreen: View {
         return [String(format: "%.1f km", visibility.inKilometers)]
     }
 
-    private func sunLines(_ weather: Weather) -> [String] {
+    private func legacySunLines(_ weather: Weather) -> [String] {
         guard let today = weather.dailyForecast.first else { return ["—"] }
         var lines: [String] = []
         if let sunshine = today.sunshineDuration {

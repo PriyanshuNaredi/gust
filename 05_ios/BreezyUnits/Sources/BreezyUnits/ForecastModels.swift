@@ -91,6 +91,8 @@ public struct DailyForecast: Hashable, Sendable {
     public let visibilityMean: Distance?
     public let visibilityMax: Distance?
     public let visibilityMin: Distance?
+    public let sunrise: Date?
+    public let sunset: Date?
 
     public init(
         date: Date,
@@ -114,7 +116,9 @@ public struct DailyForecast: Hashable, Sendable {
         cloudCoverMin: Ratio? = nil,
         visibilityMean: Distance? = nil,
         visibilityMax: Distance? = nil,
-        visibilityMin: Distance? = nil
+        visibilityMin: Distance? = nil,
+        sunrise: Date? = nil,
+        sunset: Date? = nil
     ) {
         self.date = date
         self.temperatureMax = temperatureMax
@@ -138,6 +142,14 @@ public struct DailyForecast: Hashable, Sendable {
         self.visibilityMean = visibilityMean
         self.visibilityMax = visibilityMax
         self.visibilityMin = visibilityMin
+        self.sunrise = sunrise
+        self.sunset = sunset
+    }
+
+    /// Daylight for the day, from the source's own rise/set times.
+    public var daylightDuration: TimeInterval? {
+        guard let sunrise, let sunset, sunset > sunrise else { return nil }
+        return sunset.timeIntervalSince(sunrise)
     }
 }
 
@@ -164,6 +176,10 @@ public struct Weather: Hashable, Sendable {
     /// rather than inside it, because it comes from a different endpoint and may be
     /// missing while the forecast is fine.
     public let airQuality: [Date: AirQuality]
+    /// The location's time zone, as the source reports it. Every time shown in the
+    /// UI must be formatted in *this* zone: formatting in the device's zone makes a
+    /// Berlin sunrise read as 1:26 AM on a phone set to Pacific time.
+    public let timeZone: TimeZone
     /// When the source produced this data (upstream keeps it on `base`).
     public let refreshTime: Date
 
@@ -173,6 +189,7 @@ public struct Weather: Hashable, Sendable {
         dailyForecast: [DailyForecast],
         minutelyForecast: [MinutelyForecast],
         airQuality: [Date: AirQuality] = [:],
+        timeZone: TimeZone = .current,
         refreshTime: Date
     ) {
         self.current = current
@@ -180,6 +197,7 @@ public struct Weather: Hashable, Sendable {
         self.dailyForecast = dailyForecast
         self.minutelyForecast = minutelyForecast
         self.airQuality = airQuality
+        self.timeZone = timeZone
         self.refreshTime = refreshTime
     }
 

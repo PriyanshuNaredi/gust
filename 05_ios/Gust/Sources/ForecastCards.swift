@@ -10,6 +10,24 @@
 import BreezyUnits
 import SwiftUI
 
+// MARK: - Formatting
+
+/// Every time in the UI is formatted in the *location's* zone. Using the device's
+/// zone made a Berlin sunrise show as 1:26 AM on a simulator set to Pacific time.
+extension Date {
+    func localTime(in zone: TimeZone, includeMinutes: Bool = true) -> String {
+        formatted(Date.FormatStyle(
+            date: .omitted,
+            time: includeMinutes ? .shortened : .shortened,
+            timeZone: zone
+        ))
+    }
+
+    func shortWeekday(in zone: TimeZone) -> String {
+        formatted(Date.FormatStyle(timeZone: zone).weekday(.abbreviated))
+    }
+}
+
 // MARK: - Shared chrome
 
 struct CardShell<Content: View>: View {
@@ -141,7 +159,7 @@ struct HourlyCard: View {
                 HStack(spacing: 14) {
                     ForEach(Array(hours.enumerated()), id: \.offset) { index, hour in
                         VStack(spacing: 4) {
-                            Text(index == 0 ? "Now" : hour.date.formatted(.dateTime.hour()))
+                            Text(index == 0 ? "Now" : hour.date.localTime(in: weather.timeZone))
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                             Image(systemName: symbolName(for: hour.weatherCode))
@@ -174,7 +192,7 @@ struct DailyCard: View {
             VStack(spacing: 6) {
                 ForEach(Array(weather.dailyForecast.enumerated()), id: \.offset) { index, day in
                     HStack(spacing: 8) {
-                        Text(index == 0 ? "Today" : day.date.formatted(.dateTime.weekday(.abbreviated)))
+                        Text(index == 0 ? "Today" : day.date.shortWeekday(in: weather.timeZone))
                             .font(.footnote)
                             .frame(width: 54, alignment: .leading)
                         Image(systemName: symbolName(for: nil))
@@ -275,6 +293,7 @@ struct MetricHalfCard: View {
 /// (dense bars, no axes) is the point.
 struct NowcastCard: View {
     let nowcast: Nowcast
+    let zone: TimeZone
 
     private var title: String {
         switch nowcast.state {
@@ -317,12 +336,12 @@ struct NowcastCard: View {
                 .frame(height: 34)
 
                 HStack {
-                    Text(nowcast.firstWetDate.map { $0.formatted(.dateTime.hour().minute()) } ?? "—")
+                    Text(nowcast.firstWetDate.map { $0.localTime(in: zone) } ?? "—")
                     Spacer()
                     // The window starts at the first wet step when rain is later than
                     // the strip's head, so the label has to say which window this is.
                     Text(nowcast.window(maxSteps: 12).first
-                        .map { "from " + $0.date.formatted(.dateTime.hour().minute()) } ?? "")
+                        .map { "from " + $0.date.localTime(in: zone) } ?? "")
                         .foregroundStyle(.secondary)
                 }
                 .font(.caption2)
@@ -371,5 +390,108 @@ struct PrecipitationCard: View {
         let peak = todayHours.compactMap { $0.precipitationProbability?.inPercent }.max()
         guard let peak else { return "—" }
         return String(format: "chance %.0f %%", peak)
+    }
+}
+
+// MARK: - Sun, moon, clock, footer
+
+struct SunCard: View {
+    let weather: Weather
+
+    private var today: DailyForecast? { weather.dailyForecast.first }
+
+    var body: some View {
+        CardShell(title: "Sun", icon: "sunrise") {
+            VStack(alignment: .leading, spacing: 4) {
+                row("rise", today?.sunrise)
+                row("set", today?.sunset)
+                if let daylight = today?.daylightDuration {
+                    Text(String(format: "%.0f h %02.0f", floor(daylight / 3600), (daylight / 60).truncatingRemainder(dividingBy: 60)))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("card.sun")
+    }
+
+    private func row(_ label: String, _ date: Date?) -> some View {
+        HStack(spacing: 6) {
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Spacer()
+            Text(date.map { $0.localTime(in: weather.timeZone) } ?? "—")
+                .font(.callout.weight(.medium))
+        }
+    }
+}
+
+struct MoonCard: View {
+    let weather: Weather
+
+    private var phase: MoonPhase {
+        MoonPhase(date: weather.current?.date ?? weather.refreshTime)
+    }
+
+    var body: some View {
+        CardShell(title: "Moon", icon: "moon") {
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Image(systemName: phase.symbolName)
+                        .foregroundStyle(.secondary)
+                    Text(String(format: "%.0f %%", phase.illumination * 100))
+                        .font(.title3.weight(.regular))
+                }
+                Text(phase.name)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("card.moon")
+    }
+}
+
+/// Local time at the place, which is the one card that cannot be wrong: it comes
+/// from the device clock and the coordinate's time zone, not from the source.
+struct ClockCard: View {
+    let timeZone: TimeZone
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 60)) { context in
+            CardShell(title: "Local time", icon: "clock") {
+                Text(context.date.formatted(
+                    Date.FormatStyle(date: .omitted, time: .shortened, timeZone: timeZone)
+                ))
+                    .font(.title3.weight(.regular))
+                    .monospacedDigit()
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("card.clock")
+    }
+}
+
+/// Attribution and refresh time. Not optional: the data is CC BY 4.0 and the app is
+/// an LGPL derivative, so the credit belongs on the main screen, not only in About.
+struct FooterCard: View {
+    let weather: Weather
+    let place: String
+
+    var body: some View {
+        VStack(spacing: 2) {
+            Text("Weather data by Open-Meteo (CC BY 4.0)")
+                .font(.caption2)
+            Text("Gust — a port of Breezy Weather 6.2.2 (LGPL-3.0)")
+                .font(.caption2)
+            Text("Updated " + weather.refreshTime.localTime(in: weather.timeZone))
+                .font(.caption2)
+        }
+        .foregroundStyle(.secondary)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 6)
+        .accessibilityIdentifier("card.footer")
     }
 }

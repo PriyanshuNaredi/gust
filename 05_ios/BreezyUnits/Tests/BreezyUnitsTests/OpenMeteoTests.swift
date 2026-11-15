@@ -26,7 +26,8 @@ final class OpenMeteoRequestTests: XCTestCase {
         XCTAssertEqual(byName["models"], "best_match")
 
         // Variable counts are parity: upstream sends 21 daily, 18 hourly, 12 current.
-        XCTAssertEqual(byName["daily"]?.split(separator: ",").count, 21)
+        // Ours is 23 daily because sunrise/sunset were added (documented deviation).
+        XCTAssertEqual(byName["daily"]?.split(separator: ",").count, 23)
         XCTAssertEqual(byName["hourly"]?.split(separator: ",").count, 18)
         XCTAssertEqual(byName["current"]?.split(separator: ",").count, 12)
         XCTAssertEqual(byName["minutely_15"], "precipitation")
@@ -36,7 +37,9 @@ final class OpenMeteoRequestTests: XCTestCase {
         // Order matters: Open-Meteo returns arrays positionally per variable name,
         // and a reordered list is a silent mis-mapping. Pin the head and tail.
         XCTAssertEqual(OpenMeteoRequest.dailyVariables.first, "temperature_2m_max")
-        XCTAssertEqual(OpenMeteoRequest.dailyVariables.last, "visibility_min")
+        XCTAssertEqual(OpenMeteoRequest.dailyVariables.first { $0 == "visibility_min" }, "visibility_min")
+        // The two extra variables are appended, so upstream's order is untouched.
+        XCTAssertEqual(Array(OpenMeteoRequest.dailyVariables.suffix(2)), ["sunrise", "sunset"])
         XCTAssertEqual(OpenMeteoRequest.hourlyVariables.first, "temperature_2m")
         XCTAssertEqual(OpenMeteoRequest.hourlyVariables.last, "visibility")
         XCTAssertEqual(OpenMeteoRequest.currentVariables.first, "temperature_2m")

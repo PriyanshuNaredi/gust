@@ -74,6 +74,7 @@ final class ForecastStore {
                 dailyForecast: weather.dailyForecast,
                 minutelyForecast: weather.minutelyForecast,
                 airQuality: air,
+                timeZone: weather.timeZone,
                 refreshTime: weather.refreshTime
             )
             state = .loaded(weather)

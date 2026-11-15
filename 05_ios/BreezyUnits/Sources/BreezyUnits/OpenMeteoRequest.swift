@@ -27,7 +27,11 @@ public enum OpenMeteoRequest {
         "dew_point_2m_mean", "dew_point_2m_max", "dew_point_2m_min",
         "pressure_msl_mean", "pressure_msl_max", "pressure_msl_min",
         "cloud_cover_mean", "cloud_cover_max", "cloud_cover_min",
-        "visibility_mean", "visibility_max", "visibility_min"
+        "visibility_mean", "visibility_max", "visibility_min",
+        // DEVIATION (documented in PARITY_SPEC): upstream does not request these,
+        // so Breezy shows empty sun cards when the source is Open-Meteo. The service
+        // serves them natively, and real times beat a hand-rolled solar algorithm.
+        "sunrise", "sunset"
     ]
 
     /// `hourly=` variables, in upstream's order.

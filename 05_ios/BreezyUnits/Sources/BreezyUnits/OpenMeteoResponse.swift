@@ -136,9 +136,12 @@ public struct OpenMeteoDaily: Decodable {
     public let visibilityMean: [Double?]?
     public let visibilityMax: [Double?]?
     public let visibilityMin: [Double?]?
+    /// Unix seconds, like every other timestamp in the payload.
+    public let sunrise: [Int64?]?
+    public let sunset: [Int64?]?
 
     enum CodingKeys: String, CodingKey {
-        case time
+        case time, sunrise, sunset
         case temperatureMax = "temperature_2m_max"
         case temperatureMin = "temperature_2m_min"
         case apparentTemperatureMax = "apparent_temperature_max"
