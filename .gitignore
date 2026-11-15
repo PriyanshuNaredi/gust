@@ -8,3 +8,9 @@ DerivedData/
 .build/
 *.ipa
 .DS_Store
+# generated: XcodeGen output and packaging artifacts
+06_release/
+# generated: XcodeGen output and packaging artifacts
+05_ios/Gust/Gust.xcodeproj/
+# generated: XcodeGen output and packaging artifacts
+*.xcarchive
