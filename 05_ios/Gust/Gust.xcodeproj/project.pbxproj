@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		30E2FDE520F16949BBC5F4D5 /* GustApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7211111497C2E2478DB2330B /* GustApp.swift */; };
-		68739601EC7D959F03FB3C46 /* ZZShot.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB4C10A37018BA04B6ADC09F /* ZZShot.swift */; };
 		95AEBF81116FDEE2DC934B5A /* ForecastUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B06D370F365930430E8F62EA /* ForecastUITests.swift */; };
 		A351E7C37C1E739255F9902D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76BB2FDF1E31D9C4BE3C9ECC /* ContentView.swift */; };
 		A49F672AE81D9C8A3857557C /* ForecastScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94E44869BA8C95E0872F80B6 /* ForecastScreen.swift */; };
@@ -37,7 +36,6 @@
 		8E87FF924013A166083E8D2A /* BreezyUnits */ = {isa = PBXFileReference; lastKnownFileType = folder; name = BreezyUnits; path = ../BreezyUnits; sourceTree = SOURCE_ROOT; };
 		94E44869BA8C95E0872F80B6 /* ForecastScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastScreen.swift; sourceTree = "<group>"; };
 		B06D370F365930430E8F62EA /* ForecastUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastUITests.swift; sourceTree = "<group>"; };
-		DB4C10A37018BA04B6ADC09F /* ZZShot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZZShot.swift; sourceTree = "<group>"; };
 		DBC5832EC5C150F583C8EDB6 /* GustUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GustUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		EA884193C5554F0D80196BB1 /* Gust.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Gust.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -80,7 +78,6 @@
 			children = (
 				B06D370F365930430E8F62EA /* ForecastUITests.swift */,
 				5A3973CD73E2C09C85540D58 /* ShellTests.swift */,
-				DB4C10A37018BA04B6ADC09F /* ZZShot.swift */,
 			);
 			path = UITests;
 			sourceTree = "<group>";
@@ -204,7 +201,6 @@
 			files = (
 				95AEBF81116FDEE2DC934B5A /* ForecastUITests.swift in Sources */,
 				A6E1F48EFC1D5769023108FC /* ShellTests.swift in Sources */,
-				68739601EC7D959F03FB3C46 /* ZZShot.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

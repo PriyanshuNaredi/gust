@@ -160,6 +160,10 @@ public struct Weather: Hashable, Sendable {
     public let hourlyForecast: [HourlyForecast]
     public let dailyForecast: [DailyForecast]
     public let minutelyForecast: [MinutelyForecast]
+    /// Hourly air quality, keyed by hour. Upstream keeps this beside the weather
+    /// rather than inside it, because it comes from a different endpoint and may be
+    /// missing while the forecast is fine.
+    public let airQuality: [Date: AirQuality]
     /// When the source produced this data (upstream keeps it on `base`).
     public let refreshTime: Date
 
@@ -168,13 +172,25 @@ public struct Weather: Hashable, Sendable {
         hourlyForecast: [HourlyForecast],
         dailyForecast: [DailyForecast],
         minutelyForecast: [MinutelyForecast],
+        airQuality: [Date: AirQuality] = [:],
         refreshTime: Date
     ) {
         self.current = current
         self.hourlyForecast = hourlyForecast
         self.dailyForecast = dailyForecast
         self.minutelyForecast = minutelyForecast
+        self.airQuality = airQuality
         self.refreshTime = refreshTime
+    }
+
+    /// Air quality for the hour nearest `date`, within the hour. Upstream looks up
+    /// the exact timestamp; a nearest-hour lookup is kinder to a slightly offset
+    /// clock and is what the cards need.
+    public func airQuality(near date: Date) -> AirQuality? {
+        if let exact = airQuality[date] { return exact }
+        let nearest = airQuality.min { abs($0.key.timeIntervalSince(date)) < abs($1.key.timeIntervalSince(date)) }
+        guard let nearest, abs(nearest.key.timeIntervalSince(date)) <= 3600 else { return nil }
+        return nearest.value
     }
 
     /// Upstream's `isMinutelyForecastPrecipitationPossible`: any step with an

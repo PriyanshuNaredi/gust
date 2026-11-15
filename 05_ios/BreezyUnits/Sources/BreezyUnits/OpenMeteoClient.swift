@@ -66,6 +66,46 @@ public struct OpenMeteoClient: Sendable {
         return result
     }
 
+    /// The air-quality endpoint. Separate call, separate host, and its failures must
+    /// not take the forecast down with them — callers decide that.
+    public func fetchAirQuality(
+        latitude: Double,
+        longitude: Double,
+        baseURL: String = OpenMeteoAirQualityRequest.baseURL
+    ) async throws -> OpenMeteoAirQualityResult {
+        let url = OpenMeteoAirQualityRequest.url(latitude: latitude, longitude: longitude, baseURL: baseURL)
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 20
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch {
+            throw OpenMeteoError.transport(error.localizedDescription)
+        }
+
+        if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+            if let result = try? JSONDecoder().decode(OpenMeteoAirQualityResult.self, from: data),
+               let reason = result.reason {
+                throw OpenMeteoError.service(reason)
+            }
+            throw OpenMeteoError.transport("HTTP \(http.statusCode)")
+        }
+
+        let result: OpenMeteoAirQualityResult
+        do {
+            result = try JSONDecoder().decode(OpenMeteoAirQualityResult.self, from: data)
+        } catch {
+            throw OpenMeteoError.transport("decode failed: \(error.localizedDescription)")
+        }
+        if result.error == true {
+            throw OpenMeteoError.service(result.reason ?? "Open-Meteo reported an error")
+        }
+        return result
+    }
+
     public func fetchCurrent(
         latitude: Double,
         longitude: Double,

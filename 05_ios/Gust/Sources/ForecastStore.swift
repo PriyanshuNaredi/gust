@@ -48,16 +48,34 @@ final class ForecastStore {
         hasLoaded = true
         state = .loading
         do {
-            let result = try await OpenMeteoClient().fetch(
+            let client = OpenMeteoClient()
+            async let weatherResult = client.fetch(
                 latitude: latitude, longitude: longitude, baseURL: baseURL
             )
-            let weather = OpenMeteoMapping.weather(from: result)
+            // Air quality is a separate endpoint: its failure must not take the
+            // forecast down, so it is best-effort and defaults to absent.
+            async let airResult: OpenMeteoAirQualityResult? = {
+                do { return try await client.fetchAirQuality(latitude: latitude, longitude: longitude) }
+                catch { return nil }
+            }()
+
+            let result = try await weatherResult
+            let air = OpenMeteoMapping.airQualityByDate(from: (try? await airResult)?.hourly)
+            var weather = OpenMeteoMapping.weather(from: result)
             // A "loaded" state with nothing in it would show an empty card stack and
             // look like a rendering bug, so treat it as a failure instead.
             guard weather.current != nil || !weather.dailyForecast.isEmpty else {
                 state = .failed("no usable weather in the response")
                 return
             }
+            weather = Weather(
+                current: weather.current,
+                hourlyForecast: weather.hourlyForecast,
+                dailyForecast: weather.dailyForecast,
+                minutelyForecast: weather.minutelyForecast,
+                airQuality: air,
+                refreshTime: weather.refreshTime
+            )
             state = .loaded(weather)
         } catch let error as OpenMeteoError {
             switch error {

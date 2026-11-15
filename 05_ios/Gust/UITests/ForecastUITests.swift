@@ -59,15 +59,19 @@ final class ForecastUITests: XCTestCase {
             attempts += 1
         }
 
-        let humidity = anyElement(app, "card.humidity")
-        XCTAssertTrue(humidity.exists, "humidity card missing")
+        // The first half-card row is wind + air quality, because the card list
+        // follows upstream's order (precipitation, wind, air quality, pollen,
+        // humidity, UV, visibility, pressure, sun). If that order changes, this
+        // assertion changes with it — the rule itself is tested in the package.
+        let neighbour = anyElement(app, "card.air quality")
+        XCTAssertTrue(neighbour.exists, "air quality card missing")
 
         // The law: same row, same width, no overlap.
-        XCTAssertEqual(wind.frame.minY, humidity.frame.minY, accuracy: 1.0,
+        XCTAssertEqual(wind.frame.minY, neighbour.frame.minY, accuracy: 1.0,
                        "half cards are not on the same row")
-        XCTAssertEqual(wind.frame.width, humidity.frame.width, accuracy: 1.0,
+        XCTAssertEqual(wind.frame.width, neighbour.frame.width, accuracy: 1.0,
                        "half cards have different widths")
-        XCTAssertLessThanOrEqual(wind.frame.maxX, humidity.frame.minX + 0.5,
+        XCTAssertLessThanOrEqual(wind.frame.maxX, neighbour.frame.minX + 0.5,
                                 "half cards overlap")
 
         // ...and half of the screen, not the whole width.

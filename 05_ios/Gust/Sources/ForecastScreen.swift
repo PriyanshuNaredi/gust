@@ -20,7 +20,9 @@ struct ForecastScreen: View {
     /// the whole change — the layout rule decides its row.
     private let cards: [MainCardKind] = [
         .header, .hourly, .daily,
-        .wind, .humidity, .pressure, .uv, .visibility, .sun
+        // Upstream's card order: precipitation, wind, air quality, pollen, humidity,
+        // UV, visibility, pressure, sun, moon, clock.
+        .wind, .airQuality, .humidity, .uv, .visibility, .pressure, .sun
     ]
 
     var body: some View {
@@ -80,6 +82,7 @@ struct ForecastScreen: View {
         case .header: HeaderCard(weather: weather, place: store.placeName)
         case .hourly: HourlyCard(weather: weather)
         case .daily: DailyCard(weather: weather)
+        case .airQuality: MetricHalfCard(title: "Air quality", icon: "aqi.medium", lines: airQualityLines(weather))
         case .wind: MetricHalfCard(title: "Wind", icon: "wind", lines: windLines(weather))
         case .humidity: MetricHalfCard(title: "Humidity", icon: "humidity", lines: humidityLines(weather))
         case .pressure: MetricHalfCard(title: "Pressure", icon: "gauge", lines: pressureLines(weather))
@@ -101,6 +104,19 @@ struct ForecastScreen: View {
         if let direction = wind.direction { lines.append("\(Int(direction.rounded()))°") }
         if let gusts = wind.gusts { lines.append(String(format: "gusts %.1f", gusts.inKilometersPerHour)) }
         return lines.isEmpty ? ["—"] : lines
+    }
+
+    private func airQualityLines(_ weather: Weather) -> [String] {
+        guard let air = weather.airQuality(near: weather.current?.date ?? Date()),
+              let index = air.index else { return ["—"] }
+        // Upstream names five bands over the same thresholds we ported.
+        let names = ["Good", "Fair", "Poor", "Very poor", "Excessive", "Extreme"]
+        let level = PollutantIndex.level(forIndex: index) ?? 0
+        var lines = ["\(index)", names[min(level, names.count - 1)]]
+        if let pm25 = air.pm25 {
+            lines.append(String(format: "PM2.5 %.1f", pm25.microgramsPerCubicMeter))
+        }
+        return lines
     }
 
     private func humidityLines(_ weather: Weather) -> [String] {
