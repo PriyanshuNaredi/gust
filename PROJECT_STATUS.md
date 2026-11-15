@@ -25,6 +25,7 @@ subset and `02_parity/PARITY_SPEC.md` for what exactly.
 | 9 | Settings | **done**: upstream's structure — background updates, appearance, main screen, location, sources, debug, licences | UI tests green |
 | 10 | Release | **done**: unsigned IPA + CI workflow | `ipa-build.sh` verifies bundle, version keys, licences, platform |
 | 6b | UI parity pass | **done**: weather backdrop, upstream header, trend tabs, AQ ring, wind arrow, pollen levels, day/night precipitation, detail date selector | screenshots in `07_logs/shots/` |
+| 6c | Visual layer from the layouts (tag `v0.2.0`) | **done**: two card shapes only, square half cells, 45pt value + separate unit, the 85 upstream weather drawables, 67pt trend columns, dashed sun/moon arcs, UV and visibility descriptions, tab bar removed | `02_parity/screenshots/main-top.png`, `main-lower.png`; 99 logic + 10 UI tests |
 
 ## Confirmed scope defaults (2026-11-15)
 
