@@ -56,8 +56,9 @@ both the simulator build and the IPA are unsigned by design.
 
 ## How it was built
 
-The method, the evidence and the defects found along the way live in a companion
-repository, `apk-to-ipa-playbook`. The short version:
+The method, the evidence and the 42 catalogued defects found along the way live in a
+companion set of notes that is not published yet; the port-specific evidence is here, in
+`recon/`, `02_parity/` and the commit history. The short version:
 
 1. Recon the APK, pin its checksum, and count *app* classes rather than library classes.
 2. Read the upstream Kotlin at the matching tag; jadx output loses idioms and renames
