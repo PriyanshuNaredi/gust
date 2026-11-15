@@ -149,3 +149,15 @@ LGPL-3.0 (`analysis/upstream/LICENSE`), plus `LICENSE_ADDITIONAL` (trademark/no-
 clauses). The iOS port therefore ships LGPL-3.0 with its source, keeps upstream notices, and must be
 marked as a modified/derived version rather than passed off as Breezy Weather itself. The name
 "Breezy Weather" and its logo are not ours to use as the port's identity.
+
+## Deviations added by the card-stack slice
+
+| # | Deviation | Reason | Reversible? |
+|---|---|---|---|
+| 11 | The nowcast strip charts three hours, not upstream's entire minutely series (17 days for Open-Meteo) | A 17-day strip in a 341 pt card is 0.2 pt per bar; it cannot be read. Three hours answers "is it about to rain". | Yes — change `window(maxSteps:)` |
+| 12 | When rain is later than the window head, the strip starts one step before the first wet step and the label says "from HH:MM" | Upstream's full-series chart always contains the rain. A fixed short window would otherwise read "rain starting" over an empty strip, which is what this port did before the fix. | Yes |
+| 13 | The precipitation card shows one "today" total; upstream splits day/night and looks at the previous night | Day/night halves need sunrise/sunset, which is the astronomy slice | Yes, once astronomy lands |
+
+Ported exactly, for the record: the y-scale is **absolute** (bottom at "heavy", 15 mm/h), not
+normalised to the window's peak — a drizzle must stay small, as it does on Android. Thresholds are
+per hour, so a 15-minute accumulation is multiplied by 3600/900 before comparison.

@@ -38,6 +38,9 @@ final class ForecastUITests: XCTestCase {
         XCTAssertNotEqual(temperature.label, "—", "temperature missing from a loaded forecast")
 
         XCTAssertTrue(anyElement(app, "card.hourly").exists, "hourly card missing")
+        // The nowcast card is drawn with Canvas, not text, so its presence is the
+        // only assertion that makes sense here.
+        XCTAssertTrue(anyElement(app, "card.nowcast").exists, "nowcast card missing")
         XCTAssertTrue(anyElement(app, "card.daily").exists, "daily card missing")
 
         // Upstream drops the last day of the payload; there must still be many days.
@@ -49,35 +52,52 @@ final class ForecastUITests: XCTestCase {
         let app = launch()
         XCTAssertTrue(app.staticTexts["header.temperature"].waitForExistence(timeout: 30))
 
-        let wind = anyElement(app, "card.wind")
-        XCTAssertTrue(wind.waitForExistence(timeout: 5), "wind card missing")
+        let identifiers = [
+            "card.precipitation", "card.wind", "card.air quality", "card.humidity",
+            "card.uv", "card.visibility", "card.pressure", "card.sunshine"
+        ]
 
-        // Scroll until the first half-card row is on screen.
+        // Scroll until the half-card block is on screen.
+        let firstCard = anyElement(app, "card.wind")
+        XCTAssertTrue(firstCard.waitForExistence(timeout: 10), "half cards missing")
         var attempts = 0
-        while !wind.isHittable && attempts < 6 {
+        while !firstCard.isHittable && attempts < 8 {
             app.swipeUp()
             attempts += 1
         }
 
-        // The first half-card row is wind + air quality, because the card list
-        // follows upstream's order (precipitation, wind, air quality, pollen,
-        // humidity, UV, visibility, pressure, sun). If that order changes, this
-        // assertion changes with it — the rule itself is tested in the package.
-        let neighbour = anyElement(app, "card.air quality")
-        XCTAssertTrue(neighbour.exists, "air quality card missing")
+        // Only elements actually on screen report meaningful frames; an off-screen
+        // element's frame is stale and made an earlier version of this test claim
+        // the cards overlapped.
+        let visible = identifiers
+            .map { ($0, anyElement(app, $0)) }
+            .filter { $0.1.exists && $0.1.isHittable }
+        XCTAssertGreaterThanOrEqual(visible.count, 2, "fewer than two half cards on screen")
 
-        // The law: same row, same width, no overlap.
-        XCTAssertEqual(wind.frame.minY, neighbour.frame.minY, accuracy: 1.0,
-                       "half cards are not on the same row")
-        XCTAssertEqual(wind.frame.width, neighbour.frame.width, accuracy: 1.0,
-                       "half cards have different widths")
-        XCTAssertLessThanOrEqual(wind.frame.maxX, neighbour.frame.minX + 0.5,
-                                "half cards overlap")
+        // Group by row, then assert every row of two has equal halves.
+        var rows: [Int: [(String, CGRect)]] = [:]
+        for (identifier, element) in visible {
+            let bucket = Int((element.frame.minY / 2).rounded()) * 2
+            rows[bucket, default: []].append((identifier, element.frame))
+        }
 
-        // ...and half of the screen, not the whole width.
+        var sawPair = false
+        for (_, row) in rows {
+            XCTAssertLessThanOrEqual(row.count, 2, "more than two half cards in one row: \(row.map(\.0))")
+            guard row.count == 2 else { continue }
+            sawPair = true
+            XCTAssertEqual(row[0].1.width, row[1].1.width, accuracy: 1.0,
+                           "\(row[0].0) and \(row[1].0) are not equal halves")
+            XCTAssertLessThanOrEqual(row[0].1.maxX, row[1].1.minX + 0.5,
+                                     "\(row[0].0) overlaps \(row[1].0)")
+        }
+        XCTAssertTrue(sawPair, "no two half cards shared a row: \(rows.mapValues { $0.map(\.0) })")
+
         let screenWidth = app.windows.firstMatch.frame.width
-        XCTAssertLessThan(wind.frame.width, screenWidth * 0.62,
-                          "half card is stretched instead of half width")
+        for (identifier, element) in visible {
+            XCTAssertLessThan(element.frame.width, screenWidth * 0.62,
+                              "\(identifier) is stretched instead of half width")
+        }
     }
 
     func testErrorStateOffersRecovery() {

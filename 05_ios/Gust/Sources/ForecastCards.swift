@@ -268,3 +268,108 @@ struct MetricHalfCard: View {
         .accessibilityIdentifier("card.\(title.lowercased())")
     }
 }
+// MARK: - Precipitation
+
+/// Nowcast strip: the next two hours in 15-minute steps, drawn with `Canvas`
+/// rather than a chart library, because upstream draws it by hand too and the shape
+/// (dense bars, no axes) is the point.
+struct NowcastCard: View {
+    let nowcast: Nowcast
+
+    private var title: String {
+        switch nowcast.state {
+        case .starting: return "Rain starting"
+        case .continuing: return "Rain continuing"
+        case .stopping: return "Rain stopping"
+        case .none: return "Precipitation"
+        }
+    }
+
+    var body: some View {
+        CardShell(title: title, icon: "cloud.rain") {
+            VStack(alignment: .leading, spacing: 6) {
+                Canvas { context, size in
+                    // Absolute scale like upstream: the y-axis tops out at "heavy"
+                    // (15 mm/h) so a drizzle stays a drizzle instead of filling the
+                    // card the way normalisation would.
+                    let steps = nowcast.window(maxSteps: 12)
+                    let rates = steps.map {
+                        Nowcast.millimetersPerHour(of: $0, suggesting: nowcast.stepInterval)
+                    }
+                    let scale = max(rates.max() ?? 0, 15.0)
+                    guard !steps.isEmpty, size.width > 0 else { return }
+                    let slot = size.width / CGFloat(max(steps.count, 1))
+                    for (index, rate) in rates.enumerated() {
+                        let value = rate / scale
+                        let height = max(CGFloat(value) * size.height, rate > 0 ? 2 : 0.5)
+                        let rect = CGRect(
+                            x: slot * CGFloat(index) + 1,
+                            y: size.height - height,
+                            width: max(slot - 2, 1),
+                            height: height
+                        )
+                        context.fill(
+                            Path(roundedRect: rect, cornerRadius: 1.5),
+                            with: .color(.blue.opacity(value > 0 ? 0.85 : 0.18))
+                        )
+                    }
+                }
+                .frame(height: 34)
+
+                HStack {
+                    Text(nowcast.firstWetDate.map { $0.formatted(.dateTime.hour().minute()) } ?? "—")
+                    Spacer()
+                    // The window starts at the first wet step when rain is later than
+                    // the strip's head, so the label has to say which window this is.
+                    Text(nowcast.window(maxSteps: 12).first
+                        .map { "from " + $0.date.formatted(.dateTime.hour().minute()) } ?? "")
+                        .foregroundStyle(.secondary)
+                }
+                .font(.caption2)
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("card.nowcast")
+    }
+}
+
+/// Today's precipitation total.
+///
+/// DEVIATION from upstream: Breezy splits this card into day and night halves and
+/// looks at the previous night, which needs the sun's rise/set times. This port
+/// shows a single "today" total until the astronomy port lands; see the parity
+/// ledger in 02_parity/PARITY_SPEC.md.
+struct PrecipitationCard: View {
+    let weather: Weather
+
+    var body: some View {
+        CardShell(title: "Precipitation", icon: "drop") {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(totalText)
+                    .font(.title3.weight(.regular))
+                Text(probabilityText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("card.precipitation")
+    }
+
+    private var todayHours: [HourlyForecast] {
+        guard let reference = weather.current?.date ?? weather.hourlyForecast.first?.date else { return [] }
+        let calendar = Calendar.current
+        return weather.hourlyForecast.filter { calendar.isDate($0.date, inSameDayAs: reference) }
+    }
+
+    private var totalText: String {
+        let total = todayHours.compactMap { $0.precipitation?.inMillimeters }.reduce(0, +)
+        return String(format: "%.1f mm", total)
+    }
+
+    private var probabilityText: String {
+        let peak = todayHours.compactMap { $0.precipitationProbability?.inPercent }.max()
+        guard let peak else { return "—" }
+        return String(format: "chance %.0f %%", peak)
+    }
+}

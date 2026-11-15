@@ -181,3 +181,69 @@ final class CardLayoutTests: XCTestCase {
         XCTAssertEqual(rows.flatMap(\.kinds), MainCardKind.allCases)
     }
 }
+
+final class NowcastTests: XCTestCase {
+    private func steps(_ millimetres: [Double?]) -> Nowcast {
+        let start = Date(timeIntervalSince1970: 1_794_708_900)
+        return Nowcast(steps: millimetres.enumerated().map { index, value in
+            MinutelyForecast(
+                date: start.addingTimeInterval(TimeInterval(index) * 900),
+                precipitation: value.map { $0.millimeters }
+            )
+        })
+    }
+
+    func testStatesFollowTheFirstAndLastStep() {
+        // Upstream decides from the edges only, so a wet middle with dry edges is
+        // "starting", not a fourth state.
+        XCTAssertEqual(steps([0, 0.4, 0.6, 0.2]).state, .starting)
+        XCTAssertEqual(steps([0.4, 0.6, 0.2, 0.1]).state, .continuing)
+        XCTAssertEqual(steps([0.4, 0.6, 0.2, 0]).state, .stopping)
+        XCTAssertEqual(steps([0, 0, 0, 0]).state, .none)
+    }
+
+    func testNullsCountAsDry() {
+        // A gap is not rain, and it must not make the first step look wet either.
+        XCTAssertEqual(steps([nil, 0.5, nil, nil]).state, .starting)
+        XCTAssertFalse(steps([nil, nil]).hasPrecipitation)
+    }
+
+    func testFirstAndLastWetTimes() {
+        let nowcast = steps([0, 0.2, 0.3, 0])
+        XCTAssertEqual(nowcast.firstWetDate, nowcast.steps[1].date)
+        XCTAssertEqual(nowcast.lastWetDate, nowcast.steps[2].date)
+        XCTAssertEqual(nowcast.stepInterval, 900, accuracy: 0.5)
+    }
+
+    func testWindowStartsAtTheBeginningWhenRainIsImminent() {
+        let nowcast = steps([0, 0.2, 0.3, 0.4, 0.1])
+        XCTAssertEqual(nowcast.window(maxSteps: 3).count, 3)
+        XCTAssertEqual(nowcast.window(maxSteps: 3).first?.date, nowcast.steps.first?.date)
+    }
+
+    func testWindowMovesToRainThatArrivesLater() {
+        // 20 dry steps, then rain: a card that says "rain starting" must not draw an
+        // empty strip, so the window begins just before the first wet step.
+        let nowcast = steps(Array(repeating: 0.0, count: 20) + Array(repeating: 0.5, count: 10))
+        let window = nowcast.window(maxSteps: 6)
+        XCTAssertEqual(window.count, 6)
+        XCTAssertEqual(window.first?.date, nowcast.steps[19].date)
+        XCTAssertTrue(window.contains { ($0.precipitation?.inMillimeters ?? 0) > 0 })
+    }
+
+    func testWindowHandlesNoRainAtAll() {
+        let nowcast = steps([0, 0, 0])
+        XCTAssertEqual(nowcast.window().count, 3)
+        XCTAssertEqual(nowcast.state, .none)
+    }
+
+    func testIntensityIsPerHourNotPerStep() {
+        // 15-minute accumulation: 1.5 mm in a step is 6 mm/h, just above upstream's
+        // "light" threshold of 5 mm/h.
+        let step = MinutelyForecast(date: Date(timeIntervalSince1970: 0), precipitation: 1.5.millimeters)
+        let rate = Nowcast.millimetersPerHour(of: step, suggesting: 900)
+        XCTAssertEqual(rate, 6.0, accuracy: 0.001)
+        XCTAssertGreaterThan(rate, 5.0)
+        XCTAssertLessThan(rate, 10.0)
+    }
+}

@@ -19,10 +19,11 @@ struct ForecastScreen: View {
     /// Which cards the main screen shows, in Android's order. Adding a card here is
     /// the whole change — the layout rule decides its row.
     private let cards: [MainCardKind] = [
-        .header, .hourly, .daily,
-        // Upstream's card order: precipitation, wind, air quality, pollen, humidity,
-        // UV, visibility, pressure, sun, moon, clock.
-        .wind, .airQuality, .humidity, .uv, .visibility, .pressure, .sun
+        // Upstream's order from ViewType: HEADER, ALERT, PRECIPITATION_NOWCAST,
+        // DAILY, HOURLY, then the half-size cards. Daily before hourly is not a
+        // mistake here -- it is what the Android main screen does.
+        .header, .precipitationNowcast, .daily, .hourly,
+        .precipitation, .wind, .airQuality, .humidity, .uv, .visibility, .pressure, .sun
     ]
 
     var body: some View {
@@ -80,6 +81,8 @@ struct ForecastScreen: View {
     private func card(_ kind: MainCardKind, weather: Weather) -> some View {
         switch kind {
         case .header: HeaderCard(weather: weather, place: store.placeName)
+        case .precipitationNowcast: NowcastCard(nowcast: Nowcast(steps: weather.minutelyForecast))
+        case .precipitation: PrecipitationCard(weather: weather)
         case .hourly: HourlyCard(weather: weather)
         case .daily: DailyCard(weather: weather)
         case .airQuality: MetricHalfCard(title: "Air quality", icon: "aqi.medium", lines: airQualityLines(weather))
