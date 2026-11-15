@@ -44,7 +44,7 @@ targets:
       path: Support/Info.plist
       properties:
         CFBundleDisplayName: Gust
-        CFBundleShortVersionString: "0.2.2"
+        CFBundleShortVersionString: "0.2.3"
         CFBundleVersion: "1"
         UILaunchScreen: {}
         NSLocationWhenInUseUsageDescription: >-
