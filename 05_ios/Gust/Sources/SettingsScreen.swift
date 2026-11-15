@@ -107,7 +107,7 @@ struct SettingsScreen: View {
                     }
                     .accessibilityIdentifier("settings.licences")
                 } footer: {
-                    Text("Gust 0.1.0 · a port of Breezy Weather 6.2.2, not an official release.")
+                    Text("Gust 0.2.1 · a port of Breezy Weather 6.2.2, not an official release.")
                 }
             }
             .navigationTitle("Settings")
