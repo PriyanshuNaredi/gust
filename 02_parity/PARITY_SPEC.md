@@ -246,3 +246,37 @@ Two deviations, both deliberate:
 |---|---|---|
 | 25 | The scene does not parallax with device tilt | Upstream feeds accelerometer rotation into every particle. Reading it needs `CoreMotion` and a motion-permission story for a background; the intrinsic motion (breathe, fall, twinkle) is what a user sees when holding the phone still |
 | 26 | The scene runs at 20 fps, not the display rate | Measured idle CPU on the main screen: ~10% at 30 fps, ~5.5% at 20 fps, ~0.3% paused. The scene is slow enough that 60 fps buys nothing visible. `Appearance → Animated background` pauses it entirely |
+
+## The nowcast: five-minute buckets over a two-hour window
+
+`PrecipitationNowcastViewHolder` is a Vico column chart, which is to say: a `Canvas` with
+rules. Ported from it, and asserted in `NowcastChartTests`:
+
+| What | Ported value |
+|---|---|
+| Bucket | 5 minutes, whatever the source interval is |
+| Span | 2 hours = 24 buckets (DEVIATION 27) |
+| Y scale | `max(15 mm/h, wettest bucket)` — absolute, never normalised |
+| Thresholds | 5 / 10 / 15 mm/h; below 30 mm/h all three labels, at or below 15 mm/h the medium one returns, above 30 mm/h only heavy survives |
+| Axis | baseline plus three labels: start, half, end (end = last bucket **plus one bucket**, as upstream's `maxX` is the last step's ending date) |
+| Bar colour | `RainImplementor.getThemeColor(TYPE_RAIN, daylight)` = `#4297E7` by day, `#6B91CF` at night (`getBrighterColor`: saturation −0.25, value +0.25) |
+| Axis / label colour | `colorTextGrey` `#4D4D4D` light, `colorTextGrey2nd` `#B2B2B2` dark |
+| Title | "Precipitation soon" / "Precipitation" / "Precipitation stopping soon" |
+| Description | "Expected to start at …" / "Expected to continue until at least …" / "Expected to stop at …" / "No precipitation" |
+
+Two defects that only appeared once it was drawn:
+
+- **The chart began at midnight.** Open-Meteo's `minutely_15` series starts at local
+  midnight and runs for days; upstream's radar providers send two hours starting now.
+  Applying the title law to the whole series produced "Expected to start at 2:15 AM" over
+  a chart of 17:30–19:30. The series is now clipped to the charted span, which also
+  guarantees the sentence and the chart describe the same two hours.
+- **The heavy label was clipped.** It is drawn above its line, and the heavy line is at
+  the top of the plot. The label now flips below its line when the line is within 14 pt
+  of the top.
+
+| # | Deviation | Reason |
+|---|---|---|
+| 27 | Two-hour window, not the whole minutely series | Days of 15-minute steps would be one bucket per pixel |
+| 28 | The description sits above the chart instead of overlapping its top-left corner | Upstream's constraint puts `nowcasting_block_subtitle` on the chart's first row; at 14 pt over a bar chart the text is lost against the bars |
+| 29 | No drag marker (the "14:20–14:25: Light" bubble) | Upstream shows a `DefaultCartesianMarker` on touch. Worth doing, but it is an interaction, not a repaint: recorded here so it is not mistaken for done |

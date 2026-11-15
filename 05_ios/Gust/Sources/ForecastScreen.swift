@@ -256,7 +256,12 @@ struct ForecastScreen: View {
     private func cardBody(_ kind: MainCardKind, weather: Weather) -> some View {
         switch kind {
         case .header: HeaderCard(weather: weather, place: store.place.name, units: appState.units)
-        case .precipitationNowcast: NowcastCard(nowcast: Nowcast(steps: weather.minutelyForecast), zone: weather.timeZone)
+        case .precipitationNowcast:
+            NowcastCard(
+                nowcast: Nowcast(steps: weather.minutelyForecast).relative(to: Date()),
+                zone: weather.timeZone,
+                daylight: weather.isDaylight()
+            )
         case .precipitation: PrecipitationCard(weather: weather, units: appState.units)
         case .hourly: HourlyCard(weather: weather, units: appState.units)
         case .daily: DailyCard(weather: weather, units: appState.units)

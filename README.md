@@ -16,7 +16,7 @@ ships under its own name, its own icon, and ships LGPL-3.0 with the upstream not
 | Scope | Option A — see `SCOPE.md` |
 | Weather source | Open-Meteo (forecast + air quality + geocoding) |
 | Platform | iOS 17+, Swift 6 toolchain, Swift 5 language mode |
-| Tests | 106 package + 10 UI, all green |
+| Tests | 118 package + 10 UI, all green |
 | Licence | LGPL-3.0, plus upstream's additional terms — see `LICENSE`, `LICENSE_ADDITIONAL` |
 | Status | Feature-complete for its scope, not a finished product — `PROJECT_STATUS.md` lists exactly what is and is not done |
 
@@ -25,7 +25,11 @@ ships under its own name, its own icon, and ships LGPL-3.0 with the upstream not
 - **Main screen** — upstream's animated weather background: the three-stop gradient
   asset chosen by condition, day/night and theme, with its geometric scene over it
   (rotating sun squares, breathing cloud circles, rain streaks, snowflakes, hail, wind
-  gusts, night stars, meteors, thunder flash), and the header, then the card stack
+  gusts, night stars, meteors, thunder flash), and the header
+- **Precipitation nowcast** — upstream's chart: five-minute buckets, a three-tick time
+  axis, the light/medium/heavy threshold lines with their stand-down rule, the
+  "Precipitation soon / Expected to start at …" pair, and the bar colour from the rain
+  theme (`RainImplementor.getThemeColor`). Bar and label numbers are asserted in tests, then the card stack
   with its half/full layout rule: 15-minute nowcast (Canvas), daily and hourly cards with
   Conditions / Air quality / Wind tabs, then precipitation (day or night, named after what
   is in it), wind with a direction arrow, air quality as a ring, pollen with upstream's

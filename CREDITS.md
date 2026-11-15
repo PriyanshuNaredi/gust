@@ -24,6 +24,8 @@ What was ported from upstream, file by file:
 | `Resources/WeatherIcons/*.png` | `app/src/main/res/drawable/weather_*.png` (unmodified) |
 | `BreezyUnits/WeatherScene.swift` (gradients, cloud/rain/snow/hail/wind particle tables, sun and star geometry) | `ui-weather-view/src/main/res/drawable{,-night}/weather_background_*.xml` and `materialWeatherView/implementor/*Implementor.kt` |
 | `Gust/WeatherSceneView.swift` (the animated drawing) | the same implementors' `draw()` methods |
+| `BreezyUnits/NowcastChart.swift` (bucket span, threshold law, title and description) | `PrecipitationNowcastViewHolder.kt`, `Weather.getMinutelyTitle` / `getMinutelyDescription`, `Precipitation.Companion` |
+| `Gust/NowcastCard.swift` (chart geometry) | `PrecipitationNowcastViewHolder.kt` and `container_main_precipitation_nowcast_card.xml` |
 | `ForecastScreen` navigation (no tab bar) | `res/menu/activity_main.xml` + `MainActivity` |
 
 ## Artwork
