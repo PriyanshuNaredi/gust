@@ -1,0 +1,62 @@
+# Components
+activity   org.breezyweather.ui.main.MainActivity
+activity   org.breezyweather.ui.search.SearchActivity
+activity   org.breezyweather.ui.details.DetailsActivity
+activity   org.breezyweather.ui.alert.AlertActivity
+activity   org.breezyweather.ui.settings.activities.SettingsActivity
+activity   org.breezyweather.ui.settings.activities.CardDisplayManageActivity
+activity   org.breezyweather.ui.settings.activities.DailyTrendDisplayManageActivity
+activity   org.breezyweather.ui.settings.activities.HourlyTrendDisplayManageActivity
+activity   org.breezyweather.ui.settings.activities.PreviewIconActivity
+activity   org.breezyweather.ui.settings.activities.WorkerInfoActivity
+activity   org.breezyweather.ui.about.AboutActivity
+activity   org.breezyweather.ui.settings.activities.DependenciesActivity
+activity   org.breezyweather.ui.settings.activities.PrivacyPolicyActivity
+activity   org.breezyweather.wallpaper.LiveWallpaperConfigActivity
+activity   org.breezyweather.remoteviews.config.DayWidgetConfigActivity
+activity   org.breezyweather.remoteviews.config.WeekWidgetConfigActivity
+activity   org.breezyweather.remoteviews.config.DayWeekWidgetConfigActivity
+activity   org.breezyweather.remoteviews.config.ClockDayHorizontalWidgetConfigActivity
+activity   org.breezyweather.remoteviews.config.ClockDayDetailsWidgetConfigActivity
+activity   org.breezyweather.remoteviews.config.ClockDayVerticalWidgetConfigActivity
+activity   org.breezyweather.remoteviews.config.ClockDayWeekWidgetConfigActivity
+activity   org.breezyweather.remoteviews.config.TextWidgetConfigActivity
+activity   org.breezyweather.remoteviews.config.DailyTrendWidgetConfigActivity
+activity   org.breezyweather.remoteviews.config.HourlyTrendWidgetConfigActivity
+activity   org.breezyweather.remoteviews.config.MultiCityWidgetConfigActivity
+activity   androidx.compose.ui.tooling.PreviewActivity
+service    org.breezyweather.background.interfaces.TileService
+service    org.breezyweather.wallpaper.MaterialLiveWallpaperService
+service    androidx.appcompat.app.AppLocalesMetadataHolderService
+service    androidx.work.impl.foreground.SystemForegroundService
+service    androidx.work.impl.background.systemjob.SystemJobService
+service    androidx.room.MultiInstanceInvalidationService
+receiver   org.breezyweather.background.receiver.BootReceiver
+receiver   org.breezyweather.background.receiver.NotificationReceiver
+receiver   org.breezyweather.background.receiver.widget.WidgetMaterialYouForecastProvider
+receiver   org.breezyweather.background.receiver.widget.WidgetMaterialYouCurrentProvider
+receiver   org.breezyweather.background.receiver.widget.WidgetDayProvider
+receiver   org.breezyweather.background.receiver.widget.WidgetWeekProvider
+receiver   org.breezyweather.background.receiver.widget.WidgetDayWeekProvider
+receiver   org.breezyweather.background.receiver.widget.WidgetClockDayHorizontalProvider
+receiver   org.breezyweather.background.receiver.widget.WidgetClockDayDetailsProvider
+receiver   org.breezyweather.background.receiver.widget.WidgetClockDayVerticalProvider
+receiver   org.breezyweather.background.receiver.widget.WidgetClockDayWeekProvider
+receiver   org.breezyweather.background.receiver.widget.WidgetTextProvider
+receiver   org.breezyweather.background.receiver.widget.WidgetTrendDailyProvider
+receiver   org.breezyweather.background.receiver.widget.WidgetTrendHourlyProvider
+receiver   org.breezyweather.background.receiver.widget.WidgetMultiCityProvider
+receiver   androidx.work.impl.utils.ForceStopRunnable$BroadcastReceiver
+receiver   androidx.work.impl.background.systemalarm.RescheduleReceiver
+receiver   androidx.work.impl.diagnostics.DiagnosticsReceiver
+receiver   androidx.profileinstaller.ProfileInstallReceiver
+provider   org.breezyweather.background.provider.WeatherContentProvider
+provider   androidx.core.content.FileProvider
+provider   androidx.startup.InitializationProvider
+provider   org.chickenhook.restrictionbypass.BypassProvider
+
+# Launcher
+single LAUNCHER activity expected
+
+# Activity count (a port with 1 activity has no navigation graph to port)
+26

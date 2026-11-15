@@ -1,0 +1,21 @@
+{
+  "app_package": "org.breezyweather",
+  "app_java_files": 1204,
+  "app_loc": 178136,
+  "library_java_files": 8255,
+  "total_java_files": 9459,
+  "top_library_packages": [
+    {"package": "sources/p000", "files": 7439},
+    {"package": "sources/io/jsonwebtoken/impl/security", "files": 115},
+    {"package": "sources/androidx/lifecycle", "files": 95},
+    {"package": "sources/io/jsonwebtoken/impl/lang", "files": 47},
+    {"package": "sources/io/jsonwebtoken/impl", "files": 38},
+    {"package": "sources/io/jsonwebtoken/impl/p002io", "files": 28},
+    {"package": "sources/androidx/preference", "files": 26},
+    {"package": "sources/io/requery/android/database/sqlite", "files": 23},
+    {"package": "sources/androidx/appcompat/widget", "files": 19},
+    {"package": "sources/com/google/android/material", "files": 16},
+    {"package": "sources/james/adaptiveicon", "files": 15},
+    {"package": "sources/androidx/lifecycle/viewmodel", "files": 15}
+  ]
+}

@@ -1,0 +1,10 @@
+# analysis inputs (re-downloadable, large)
+analysis/upstream/
+analysis/decompiled/
+analysis/decoded/
+*.apk
+07_logs/
+DerivedData/
+.build/
+*.ipa
+.DS_Store

@@ -1,0 +1,14 @@
+v1 (JAR) signature: yes
+APK Signing Block: present (4088 bytes)
+  scheme v2: 1344 bytes
+  scheme v3: 1344 bytes
+  scheme 0x42726577: 1352 bytes
+
+--- signing certificate ---
+subject=O=Breezy Weather
+issuer=O=Breezy Weather
+notBefore=Jun 21 15:40:08 2023 GMT
+notAfter=Jun 14 15:40:08 2048 GMT
+sha256 Fingerprint=29:D4:35:F7:0A:A9:AE:C3:C1:FA:FF:7F:7F:FA:6E:15:78:50:88:D8:7F:06:EC:FC:AB:9C:3C:C6:2D:C2:69:D8
+
+Note: CN=Android Debug means the build was not signed by the original publisher -- verify provenance before porting.

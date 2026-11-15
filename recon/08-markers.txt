@@ -1,0 +1,41 @@
+# framework
+Compose present in app classes
+No app-owned fragments (library hits ignored)
+DI: hilt present in app classes
+RecyclerView used by app classes: stage 6 has View-system list work, not only Compose
+ComposeView interop: Compose embedded in View hierarchy (check which is primary)
+Home-screen widgets present: NO iOS equivalent (WidgetKit is a different product)
+Live wallpaper present: NO iOS equivalent at all
+Background work beyond resume refresh: iOS BGTaskScheduler cannot do the same thing
+
+# structural markers in app classes (files containing each)
+SharedPreferences      5
+Canvas                 9
+
+# entry points (app classes with onCreate)
+sources/org/breezyweather/background/provider/WeatherContentProvider.java
+sources/org/breezyweather/background/interfaces/Hilt_TileService.java
+sources/org/breezyweather/BreezyWeather.java
+sources/org/breezyweather/wallpaper/MaterialLiveWallpaperService.java
+sources/org/breezyweather/wallpaper/Hilt_MaterialLiveWallpaperService.java
+sources/org/breezyweather/wallpaper/LiveWallpaperConfigActivity.java
+
+# obfuscation signal (app classes with 1-2 char names)
+short-named app files: 1 of 1204
+
+# jadx package renames (collision with a library package)
+p000
+(paths in this report use those names; source paths differ)
+
+# where the code actually lives (app subpackages, by class count)
+sources                       1097
+background                      40
+p004ui                          35
+remoteviews                     24
+wallpaper                        3
+common                           2
+unit                             1
+
+# size
+app:     1204 java files, 178136 lines
+bundled: 8255 classes of libraries (not ported, just dependencies)

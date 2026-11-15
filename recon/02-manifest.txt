@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:compileSdkVersion="37" android:compileSdkVersionCodename="17" package="org.breezyweather" platformBuildVersionCode="37" platformBuildVersionName="17">
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+    <uses-permission android:maxSdkVersion="32" android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>
+    <uses-permission android:name="android.permission.EXPAND_STATUS_BAR"/>
+    <uses-permission android:minSdkVersion="34" android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.READ_APP_SPECIFIC_LOCALES"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
+    <permission android:description="@string/content_provider_permission_description" android:icon="@drawable/ic_launcher_foreground" android:label="@string/content_provider_permission_label" android:name="org.breezyweather.READ_PROVIDER" android:protectionLevel="dangerous"/>
+    <uses-feature android:name="android.software.live_wallpaper" android:required="false"/>
+    <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
+    <uses-feature android:name="android.hardware.location.network" android:required="false"/>
+    <queries>
+        <intent>
+            <action android:name="org.breezyweather.ICON_PROVIDER"/>
+        </intent>
+        <intent>
+            <action android:name="wangdaye.com.geometricweather.ICON_PROVIDER"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN"/>
+        </intent>
+        <intent>
+            <action android:name="nodomain.freeyourgadget.gadgetbridge.ACTION_GENERIC_WEATHER"/>
+        </intent>
+    </queries>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <permission android:name="org.breezyweather.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" android:protectionLevel="signature"/>
+    <uses-permission android:name="org.breezyweather.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"/>
+    <application android:allowCrossUidActivitySwitchFromBelow="false" android:appComponentFactory="androidx.core.app.CoreComponentFactory" android:enableOnBackInvokedCallback="true" android:extractNativeLibs="false" android:icon="@mipmap/ic_launcher" android:label="@string/brand_name" android:largeHeap="true" android:localeConfig="@xml/locales_config" android:memtagMode="async" android:name="org.breezyweather.BreezyWeather" android:networkSecurityConfig="@xml/network_security_config" android:supportsRtl="true" android:theme="@style/BreezyWeatherTheme">
+        <meta-data android:name="org.breezyweather.PROVIDER_CONFIG" android:resource="@xml/icon_provider_config"/>
+        <meta-data android:name="org.breezyweather.DRAWABLE_FILTER" android:resource="@xml/icon_provider_drawable_filter"/>
+        <meta-data android:name="org.breezyweather.ANIMATOR_FILTER" android:resource="@xml/icon_provider_animator_filter"/>
+        <meta-data android:name="org.breezyweather.SHORTCUT_FILTER" android:resource="@xml/icon_provider_shortcut_filter"/>
+        <meta-data android:name="org.breezyweather.SUN_MOON_FILTER" android:resource="@xml/icon_provider_sun_moon_filter"/>
+        <activity android:exported="true" android:label="@string/app_name" android:name="org.breezyweather.ui.main.MainActivity" android:theme="@style/BreezyWeatherTheme.Main">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.APP_WEATHER"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="org.breezyweather.Main"/>
+                <action android:name="org.breezyweather.ACTION_SHOW_ALERTS"/>
+                <action android:name="org.breezyweather.ACTION_SHOW_DAILY_FORECAST"/>
+                <action android:name="org.breezyweather.ACTION_MANAGEMENT"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+            <intent-filter android:label="@string/action_add_as_location">
+                <data android:scheme="geo"/>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+            </intent-filter>
+        </activity>
+        <activity android:label="@string/action_search" android:name="org.breezyweather.ui.search.SearchActivity" android:theme="@style/BreezyWeatherTheme.Search" android:windowSoftInputMode="adjustResize"/>
+        <activity android:label="@string/daily_forecast" android:name="org.breezyweather.ui.details.DetailsActivity" android:theme="@style/BreezyWeatherTheme"/>
+        <activity android:label="@string/alerts" android:name="org.breezyweather.ui.alert.AlertActivity" android:theme="@style/BreezyWeatherTheme"/>
+        <activity android:exported="true" android:label="@string/action_settings" android:name="org.breezyweather.ui.settings.activities.SettingsActivity" android:theme="@style/BreezyWeatherTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.APPLICATION_PREFERENCES"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+        <activity android:label="@string/settings_main_cards_title" android:name="org.breezyweather.ui.settings.activities.CardDisplayManageActivity" android:theme="@style/BreezyWeatherTheme"/>
+        <activity android:label="@string/settings_main_daily_trends_title" android:name="org.breezyweather.ui.settings.activities.DailyTrendDisplayManageActivity" android:theme="@style/BreezyWeatherTheme"/>
+        <activity android:label="@string/settings_main_hourly_trends_title" android:name="org.breezyweather.ui.settings.activities.HourlyTrendDisplayManageActivity" android:theme="@style/BreezyWeatherTheme"/>
+        <activity android:label="@string/action_preview" android:name="org.breezyweather.ui.settings.activities.PreviewIconActivity" android:theme="@style/BreezyWeatherTheme"/>
+        <activity android:label="@string/settings_background_updates_worker_info_title" android:name="org.breezyweather.ui.settings.activities.WorkerInfoActivity" android:theme="@style/BreezyWeatherTheme"/>
+        <activity android:label="@string/action_about" android:name="org.breezyweather.ui.about.AboutActivity" android:theme="@style/BreezyWeatherTheme"/>
+        <activity android:label="@string/action_dependencies" android:name="org.breezyweather.ui.settings.activities.DependenciesActivity" android:theme="@style/BreezyWeatherTheme"/>
+        <activity android:label="@string/about_privacy_policy" android:name="org.breezyweather.ui.settings.activities.PrivacyPolicyActivity" android:theme="@style/BreezyWeatherTheme"/>
+        <activity android:exported="true" android:label="@string/settings_modules_live_wallpaper_title" android:name="org.breezyweather.wallpaper.LiveWallpaperConfigActivity" android:theme="@style/BreezyWeatherTheme"/>
+        <activity android:exported="true" android:name="org.breezyweather.remoteviews.config.DayWidgetConfigActivity" android:theme="@style/BreezyWeatherTheme">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+            </intent-filter>
+        </activity>
+        <activity android:exported="true" android:name="org.breezyweather.remoteviews.config.WeekWidgetConfigActivity" android:theme="@style/BreezyWeatherTheme">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+            </intent-filter>
+        </activity>
+        <activity android:exported="true" android:name="org.breezyweather.remoteviews.config.DayWeekWidgetConfigActivity" android:theme="@style/BreezyWeatherTheme">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+            </intent-filter>
+        </activity>
+        <activity android:exported="true" android:name="org.breezyweather.remoteviews.config.ClockDayHorizontalWidgetConfigActivity" android:theme="@style/BreezyWeatherTheme">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+            </intent-filter>
+        </activity>
+        <activity android:exported="true" android:name="org.breezyweather.remoteviews.config.ClockDayDetailsWidgetConfigActivity" android:theme="@style/BreezyWeatherTheme">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+            </intent-filter>
+        </activity>
+        <activity android:exported="true" android:name="org.breezyweather.remoteviews.config.ClockDayVerticalWidgetConfigActivity" android:theme="@style/BreezyWeatherTheme">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+            </intent-filter>
+        </activity>
+        <activity android:exported="true" android:name="org.breezyweather.remoteviews.config.ClockDayWeekWidgetConfigActivity" android:theme="@style/BreezyWeatherTheme">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+            </intent-filter>
+        </activity>
+        <activity android:exported="true" android:name="org.breezyweather.remoteviews.config.TextWidgetConfigActivity" android:theme="@style/BreezyWeatherTheme">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+            </intent-filter>
+        </activity>
+        <activity android:exported="true" android:name="org.breezyweather.remoteviews.config.DailyTrendWidgetConfigActivity" android:theme="@style/BreezyWeatherTheme">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+            </intent-filter>
+        </activity>
+        <activity android:exported="true" android:name="org.breezyweather.remoteviews.config.HourlyTrendWidgetConfigActivity" android:theme="@style/BreezyWeatherTheme">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+            </intent-filter>
+        </activity>
+        <activity android:exported="true" android:name="org.breezyweather.remoteviews.config.MultiCityWidgetConfigActivity" android:theme="@style/BreezyWeatherTheme">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+            </intent-filter>
+        </activity>
+        <service android:exported="true" android:foregroundServiceType="specialUse" android:icon="@drawable/weather_clear_day_mini_light" android:label="@string/brand_name" android:name="org.breezyweather.background.interfaces.TileService" android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE"/>
+            </intent-filter>
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="tile"/>
+        </service>
+        <service android:exported="true" android:foregroundServiceType="specialUse" android:name="org.breezyweather.wallpaper.MaterialLiveWallpaperService" android:permission="android.permission.BIND_WALLPAPER">
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService"/>
+            </intent-filter>
+            <meta-data android:name="android.service.wallpaper" android:resource="@xml/live_wallpaper"/>
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="wallpaper"/>
+        </service>
+        <receiver android:exported="true" android:name="org.breezyweather.background.receiver.BootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:exported="false" android:name="org.breezyweather.background.receiver.NotificationReceiver"/>
+        <receiver android:exported="true" android:label="@string/widget_material_you_forecast" android:name="org.breezyweather.background.receiver.widget.WidgetMaterialYouForecastProvider">
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_material_you_forecast"/>
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="android.appwidget.action.ACTION_APPWIDGET_DISABLED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:exported="true" android:label="@string/widget_material_you_current" android:name="org.breezyweather.background.receiver.widget.WidgetMaterialYouCurrentProvider">
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_material_you_current"/>
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_ENABLED"/>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="android.appwidget.action.APPWIDGET_OPTIONS_CHANGED"/>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE_OPTIONS"/>
+                <action android:name="android.appwidget.action.ACTION_APPWIDGET_DISABLED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:exported="true" android:label="@string/widget_day" android:name="org.breezyweather.background.receiver.widget.WidgetDayProvider">
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_day"/>
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="android.appwidget.action.ACTION_APPWIDGET_DISABLED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:exported="true" android:label="@string/widget_week" android:name="org.breezyweather.background.receiver.widget.WidgetWeekProvider">
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_week"/>
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="android.appwidget.action.ACTION_APPWIDGET_DISABLED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:exported="true" android:label="@string/widget_day_week" android:name="org.breezyweather.background.receiver.widget.WidgetDayWeekProvider">
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_day_week"/>
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="android.appwidget.action.ACTION_APPWIDGET_DISABLED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:exported="true" android:label="@string/widget_clock_day_horizontal" android:name="org.breezyweather.background.receiver.widget.WidgetClockDayHorizontalProvider">
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_clock_day_horizontal"/>
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="android.appwidget.action.ACTION_APPWIDGET_DISABLED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:exported="true" android:label="@string/widget_clock_day_details" android:name="org.breezyweather.background.receiver.widget.WidgetClockDayDetailsProvider">
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_clock_day_details"/>
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="android.appwidget.action.ACTION_APPWIDGET_DISABLED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:exported="true" android:label="@string/widget_clock_day_vertical" android:name="org.breezyweather.background.receiver.widget.WidgetClockDayVerticalProvider">
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_clock_day_vertical"/>
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="android.appwidget.action.ACTION_APPWIDGET_DISABLED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:exported="true" android:label="@string/widget_clock_day_week" android:name="org.breezyweather.background.receiver.widget.WidgetClockDayWeekProvider">
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_clock_day_week"/>
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="android.appwidget.action.ACTION_APPWIDGET_DISABLED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:exported="true" android:label="@string/widget_text" android:name="org.breezyweather.background.receiver.widget.WidgetTextProvider">
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_text"/>
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="android.appwidget.action.ACTION_APPWIDGET_DISABLED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:exported="true" android:label="@string/widget_trend_daily" android:name="org.breezyweather.background.receiver.widget.WidgetTrendDailyProvider">
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_trend_daily"/>
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="android.appwidget.action.ACTION_APPWIDGET_DISABLED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:exported="true" android:label="@string/widget_trend_hourly" android:name="org.breezyweather.background.receiver.widget.WidgetTrendHourlyProvider">
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_trend_hourly"/>
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="android.appwidget.action.ACTION_APPWIDGET_DISABLED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:exported="true" android:label="@string/widget_multi_city" android:name="org.breezyweather.background.receiver.widget.WidgetMultiCityProvider">
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_multi_city"/>
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="android.appwidget.action.ACTION_APPWIDGET_DISABLED"/>
+            </intent-filter>
+        </receiver>
+        <service android:enabled="false" android:exported="false" android:name="androidx.appcompat.app.AppLocalesMetadataHolderService">
+            <meta-data android:name="autoStoreLocales" android:value="true"/>
+        </service>
+        <service android:directBootAware="false" android:enabled="@bool/enable_system_foreground_service_default" android:exported="false" android:foregroundServiceType="dataSync|shortService" android:name="androidx.work.impl.foreground.SystemForegroundService"/>
+        <provider android:authorities="org.breezyweather.provider.weather" android:exported="true" android:name="org.breezyweather.background.provider.WeatherContentProvider" android:readPermission="org.breezyweather.READ_PROVIDER"/>
+        <provider android:authorities="org.breezyweather.fileprovider" android:exported="false" android:grantUriPermissions="true" android:name="androidx.core.content.FileProvider">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/provider_paths"/>
+        </provider>
+        <provider android:authorities="org.breezyweather.androidx-startup" android:exported="false" android:name="androidx.startup.InitializationProvider">
+            <meta-data android:name="androidx.emoji2.text.EmojiCompatInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="androidx.lifecycle.ProcessLifecycleInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="androidx.profileinstaller.ProfileInstallerInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="okhttp3.internal.platform.PlatformInitializer" android:value="androidx.startup"/>
+        </provider>
+        <provider android:authorities="org.breezyweather.restrictionbypass" android:enabled="true" android:exported="false" android:name="org.chickenhook.restrictionbypass.BypassProvider"/>
+        <activity android:exported="true" android:name="androidx.compose.ui.tooling.PreviewActivity"/>
+        <service android:directBootAware="false" android:enabled="@bool/enable_system_job_service_default" android:exported="true" android:name="androidx.work.impl.background.systemjob.SystemJobService" android:permission="android.permission.BIND_JOB_SERVICE"/>
+        <receiver android:directBootAware="false" android:enabled="true" android:exported="false" android:name="androidx.work.impl.utils.ForceStopRunnable$BroadcastReceiver"/>
+        <receiver android:directBootAware="false" android:enabled="false" android:exported="false" android:name="androidx.work.impl.background.systemalarm.RescheduleReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:directBootAware="false" android:enabled="true" android:exported="true" android:name="androidx.work.impl.diagnostics.DiagnosticsReceiver" android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="androidx.work.diagnostics.REQUEST_DIAGNOSTICS"/>
+            </intent-filter>
+        </receiver>
+        <uses-library android:name="androidx.window.extensions" android:required="false"/>
+        <uses-library android:name="androidx.window.sidecar" android:required="false"/>
+        <service android:directBootAware="true" android:exported="false" android:name="androidx.room.MultiInstanceInvalidationService"/>
+        <receiver android:directBootAware="false" android:enabled="true" android:exported="true" android:name="androidx.profileinstaller.ProfileInstallReceiver" android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="androidx.profileinstaller.action.SKIP_FILE"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION"/>
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

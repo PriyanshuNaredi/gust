@@ -1,0 +1,19 @@
+# Permissions, with the likely iOS counterpart
+android.permission.ACCESS_FINE_LOCATION        -> CoreLocation whenInUse + NSLocationWhenInUseUsageDescription
+android.permission.ACCESS_COARSE_LOCATION      -> CoreLocation whenInUse + NSLocationWhenInUseUsageDescription
+android.permission.ACCESS_BACKGROUND_LOCATION  -> UNKNOWN - decide at stage 3
+android.permission.READ_EXTERNAL_STORAGE       -> none (PhotoKit / no shared storage)
+android.permission.FOREGROUND_SERVICE          -> BGTaskScheduler or drop the background work
+android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -> UNKNOWN - decide at stage 3
+android.permission.ACCESS_NETWORK_STATE        -> NWPathMonitor
+android.permission.ACCESS_WIFI_STATE           -> UNKNOWN - decide at stage 3
+android.permission.INTERNET                    -> none (always allowed)
+android.permission.RECEIVE_BOOT_COMPLETED      -> none (no boot hook)
+com.android.alarm.permission.SET_ALARM         -> UNKNOWN - decide at stage 3
+android.permission.EXPAND_STATUS_BAR           -> UNKNOWN - decide at stage 3
+android.permission.FOREGROUND_SERVICE_SPECIAL_USE -> BGTaskScheduler or drop the background work
+android.permission.POST_NOTIFICATIONS          -> UNUserNotificationCenter request; no manifest key
+android.permission.READ_APP_SPECIFIC_LOCALES   -> UNKNOWN - decide at stage 3
+android.permission.FOREGROUND_SERVICE_DATA_SYNC -> BGTaskScheduler or drop the background work
+android.permission.WAKE_LOCK                   -> none (no equivalent; redesign)
+org.breezyweather.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION -> UNKNOWN - decide at stage 3
