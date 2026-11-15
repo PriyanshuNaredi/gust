@@ -34,7 +34,8 @@ public enum OpenMeteoMapping {
             dewPoint: raw.dewPoint.map { $0.celsius },
             pressure: raw.pressureMsl.map { $0.hectopascals },
             cloudCover: raw.cloudCover.map { Double($0).percent },
-            visibility: raw.visibility.map { $0.meters }
+            visibility: raw.visibility.map { $0.meters },
+            isDay: raw.isDay.map { $0 == 1 }
         )
     }
 

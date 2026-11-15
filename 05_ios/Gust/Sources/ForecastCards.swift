@@ -104,112 +104,300 @@ struct HeaderCard: View {
     let units: UnitPreferences
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text(place)
-                    .font(.headline)
+        VStack(spacing: 2) {
+            HStack(spacing: 6) {
+                Image(systemName: "clock")
+                    .font(.footnote.weight(.semibold))
+                Text(relativeRefreshTime)
+                    .font(.footnote.weight(.semibold))
+                    .accessibilityIdentifier("header.refreshTime")
                 Spacer()
-                Image(systemName: symbolName(for: weather.current?.weatherCode))
-                    .font(.title2)
-                    .foregroundStyle(.secondary)
+            }
+            .padding(.bottom, 6)
+
+            if let condition = conditionText {
+                Text(condition)
+                    .font(.title3.weight(.semibold))
+                    .accessibilityIdentifier("header.condition")
             }
 
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text(temperatureText)
-                    .font(.system(size: 44, weight: .thin, design: .rounded))
+            HStack(alignment: .top, spacing: 2) {
+                Text(temperatureValue)
+                    .font(.system(size: 92, weight: .bold, design: .rounded))
                     .accessibilityIdentifier("header.temperature")
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(familyLabel(weather.current?.weatherCode))
-                        .font(.subheadline)
-                    if let feelsLike = weather.current?.apparentTemperature {
-                        Text("feels like " + units.string(feelsLike))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                Spacer()
+                Text(units.temperature == .fahrenheit ? "°F" : "°C")
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .padding(.top, 10)
+            }
+            .foregroundStyle(foreground)
+            .accessibilityElement(children: .contain)
+
+            if let feelsLike = weather.current?.apparentTemperature,
+               feelsLike != weather.current?.temperature || feelsLike == nil {
+                // Narrow width in upstream's header: whole degrees.
+                Text("feels like " + units.degrees(feelsLike))
+                    .font(.headline.weight(.medium))
+                    .accessibilityIdentifier("header.feelsLike")
+            }
+
+            if let range = dayNightRange {
+                Text(range)
+                    .font(.subheadline)
+                    .padding(.top, 2)
+                    .accessibilityIdentifier("header.dayNight")
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .foregroundStyle(foreground)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("card.header")
     }
 
-    private var temperatureText: String {
-        guard let temperature = weather.current?.temperature else { return "—" }
-        return String(format: "%.1f°", units.temperature == .fahrenheit ? temperature.inFahrenheit : temperature.inCelsius)
+    /// Upstream picks one text colour for the whole header: black on the pale day
+    /// colours, white on the darkened night ones.
+    private var foreground: Color {
+        weather.isDaylight() ? Color.black.opacity(0.86) : .white
     }
+
+    private var temperatureValue: String {
+        guard let temperature = weather.current?.temperature else { return "—" }
+        let value = units.temperature == .fahrenheit ? temperature.inFahrenheit : temperature.inCelsius
+        return String(format: "%.0f", value)
+    }
+
+    private var conditionText: String? {
+        weather.current?.weatherCode.map(familyLabel)
+    }
+
+    private var relativeRefreshTime: String {
+        let minutes = Int(Date().timeIntervalSince(weather.refreshTime) / 60)
+        switch minutes {
+        case ..<1: return "just now"
+        case 1: return "1 min ago"
+        default: return "\(minutes) mins ago"
+        }
+    }
+
+    /// Upstream's `getTemperatureRangeSummary`: "Day: 24° • Night: 14°".
+    private var dayNightRange: String? {
+        guard let today = weather.dailyForecast.first else { return nil }
+        // The daily list drops the last day, so the first entry is today.
+        let formatter = units.temperature == .fahrenheit
+        guard let high = today.temperatureMax, let low = today.temperatureMin else { return nil }
+        let highValue = formatter ? high.inFahrenheit : high.inCelsius
+        let lowValue = formatter ? low.inFahrenheit : low.inCelsius
+        return String(format: "Day: %.0f°  •  Night: %.0f°", highValue, lowValue)
+    }
+
 }
 
 // MARK: - Hourly
 
+/// Upstream's hourly card is a trend with tabs, not a plain strip: the same hours in
+/// the same order, seen three ways.
+enum TrendTab: String, CaseIterable, Identifiable {
+    case conditions = "Conditions"
+    case airQuality = "Air quality"
+    case wind = "Wind"
+
+    var id: String { rawValue }
+}
+
 struct HourlyCard: View {
     let weather: Weather
     let units: UnitPreferences
+    @State private var tab: TrendTab = .conditions
 
-    /// Twelve hours from the current one, as upstream's hourly card shows a strip.
     private var hours: [HourlyForecast] {
         let from = weather.current?.date ?? weather.hourlyForecast.first?.date ?? Date()
-        return Array(weather.hourlyForecast(from: from).prefix(12))
+        return Array(weather.hourlyForecast(from: from).prefix(24))
     }
 
     var body: some View {
-        CardShell(title: "Hourly", icon: "clock") {
+        CardShell(title: "Hourly forecast", icon: "clock") {
+            TrendTabs(selection: $tab)
+
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 14) {
-                    ForEach(Array(hours.enumerated()), id: \.offset) { index, hour in
-                        VStack(spacing: 4) {
-                            Text(index == 0 ? "Now" : hour.date.localTime(in: weather.timeZone))
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                            Image(systemName: symbolName(for: hour.weatherCode))
-                                .font(.body)
-                            Text(units.degrees(hour.temperature))
-                                .font(.footnote.weight(.medium))
-                            if let probability = hour.precipitationProbability, probability.inPercent >= 5 {
-                                Text(String(format: "%.0f%%", probability.inPercent))
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 0) {
+                        ForEach(Array(hours.enumerated()), id: \.offset) { index, hour in
+                            VStack(spacing: 3) {
+                                Text(index == 0 ? "Now" : hour.date.localTime(in: weather.timeZone))
                                     .font(.caption2)
-                                    .foregroundStyle(.blue)
+                                    .foregroundStyle(.secondary)
+                                Image(systemName: symbolName(for: hour.weatherCode))
+                                    .font(.footnote)
+                                Text(value(for: hour))
+                                    .font(.caption.weight(.medium))
+                                if tab == .conditions,
+                                   let probability = hour.precipitationProbability,
+                                   probability.inPercent >= 5 {
+                                    Text(String(format: "%.0f%%", probability.inPercent))
+                                        .font(.caption2)
+                                        .foregroundStyle(.blue)
+                                }
                             }
+                            .frame(width: 46)
                         }
-                        .frame(width: 40)
                     }
+                    TrendChart(values: series, height: 56)
+                        .frame(width: 46 * CGFloat(hours.count))
                 }
             }
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("hourly.strip")
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("card.hourly")
     }
+
+    private var series: [Double] {
+        hours.map { hour -> Double in
+            switch tab {
+            case .conditions: return temperatureValue(hour)
+            case .airQuality:
+                return Double(weather.airQuality(near: hour.date)?.index ?? 0)
+            case .wind:
+                let speed = hour.wind?.speed
+                return units.speed == .milesPerHour ? (speed?.inMilesPerHour ?? 0) : (speed?.inKilometersPerHour ?? 0)
+            }
+        }
+    }
+
+    private func temperatureValue(_ hour: HourlyForecast) -> Double {
+        guard let temperature = hour.temperature else { return 0 }
+        return units.temperature == .fahrenheit ? temperature.inFahrenheit : temperature.inCelsius
+    }
+
+    private func value(for hour: HourlyForecast) -> String {
+        switch tab {
+        case .conditions: return units.degrees(hour.temperature)
+        case .airQuality:
+            guard let index = weather.airQuality(near: hour.date)?.index else { return "—" }
+            return String(index)
+        case .wind: return units.string(hour.wind?.speed)
+        }
+    }
 }
 
-// MARK: - Daily
+struct TrendTabs: View {
+    @Binding var selection: TrendTab
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ForEach(TrendTab.allCases) { candidate in
+                Button {
+                    selection = candidate
+                } label: {
+                    Text(candidate.rawValue)
+                        .font(.caption2.weight(.semibold))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            selection == candidate ? Color.accentColor.opacity(0.16) : Color.clear,
+                            in: Capsule()
+                        )
+                        .foregroundStyle(selection == candidate ? Color.accentColor : Color.secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("tab.\(candidate.rawValue)")
+            }
+            Spacer()
+        }
+    }
+}
+
+/// A line with faint grid lines and its extremes labelled, which is what the upstream
+/// trend charts show. Not a normalised sparkline: the y-scale is the series' own range
+/// so the labels mean something.
+struct TrendChart: View {
+    let values: [Double]
+    let height: CGFloat
+
+    var body: some View {
+        Canvas { context, size in
+            guard values.count > 1 else { return }
+            let low = values.min() ?? 0
+            let high = values.max() ?? 1
+            let span = max(high - low, 0.5)
+
+            for fraction in [0.0, 0.5, 1.0] {
+                var grid = Path()
+                let y = size.height * fraction
+                grid.move(to: CGPoint(x: 0, y: y))
+                grid.addLine(to: CGPoint(x: size.width, y: y))
+                context.stroke(grid, with: .color(.secondary.opacity(0.15)), lineWidth: 0.5)
+            }
+
+            let gutter: CGFloat = 34
+            var path = Path()
+            for (index, value) in values.enumerated() {
+                let x = gutter + (size.width - gutter) * CGFloat(index) / CGFloat(values.count - 1)
+                let y = size.height - (size.height - 12) * CGFloat((value - low) / span) - 6
+                if index == 0 { path.move(to: CGPoint(x: x, y: y)) } else { path.addLine(to: CGPoint(x: x, y: y)) }
+            }
+            context.stroke(path, with: .color(.accentColor), lineWidth: 2)
+            context.draw(
+                Text(String(format: "%.0f", high)).font(.caption2).foregroundStyle(.secondary),
+                at: CGPoint(x: gutter / 2, y: 8)
+            )
+            context.draw(
+                Text(String(format: "%.0f", low)).font(.caption2).foregroundStyle(.secondary),
+                at: CGPoint(x: gutter / 2, y: size.height - 8)
+            )
+        }
+        .frame(height: height)
+        .accessibilityHidden(true)
+    }
+}
 
 struct DailyCard: View {
     let weather: Weather
     let units: UnitPreferences
+    @State private var tab: TrendTab = .conditions
 
     var body: some View {
-        CardShell(title: "Daily", icon: "calendar") {
+        CardShell(title: "Daily forecast", icon: "calendar") {
+            TrendTabs(selection: $tab)
             VStack(spacing: 6) {
                 ForEach(Array(weather.dailyForecast.enumerated()), id: \.offset) { index, day in
                     HStack(spacing: 8) {
                         Text(index == 0 ? "Today" : day.date.shortWeekday(in: weather.timeZone))
                             .font(.footnote)
                             .frame(width: 54, alignment: .leading)
-                        Image(systemName: symbolName(for: nil))
-                            .font(.caption)
-                            .hidden()
-                        Text(minText(day))
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .frame(width: 46, alignment: .trailing)
-                        TemperatureBar(day: day, allDays: weather.dailyForecast)
-                            .frame(height: 4)
-                        Text(maxText(day))
-                            .font(.footnote.weight(.medium))
-                            .frame(width: 46, alignment: .leading)
+                        switch tab {
+                        case .conditions:
+                            Image(systemName: symbolName(for: dominantCode(day, index: index)))
+                                .font(.caption)
+                                .frame(width: 20)
+                                .accessibilityHidden(true)
+                            Text(minText(day))
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                                .frame(width: 46, alignment: .trailing)
+                            TemperatureBar(day: day, allDays: weather.dailyForecast)
+                                .frame(height: 4)
+                            Text(maxText(day))
+                                .font(.footnote.weight(.medium))
+                                .frame(width: 46, alignment: .leading)
+                        case .airQuality:
+                            Text("AQI")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text(airQualityText(day))
+                                .font(.footnote.weight(.medium))
+                                .foregroundStyle(.secondary)
+                        case .wind:
+                            Text("Wind")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text(windText(day))
+                                .font(.footnote.weight(.medium))
+                        }
                     }
                     .accessibilityIdentifier("daily.row.\(index)")
                 }
@@ -219,11 +407,37 @@ struct DailyCard: View {
         // ("daily.row.0-daily.row.0-…"). The card is addressable as cardLink.daily.
     }
 
+    /// The day's weather at the hour this card starts, which is what upstream's icon
+    /// column shows: the hourly entry nearest midday is a fair stand-in for a daily row.
+    private func dominantCode(_ day: DailyForecast, index: Int) -> WeatherCode? {
+        guard let noon = day.date.addingTimeInterval(12 * 3600) as Date? else { return nil }
+        let candidates = weather.hourlyForecast.filter {
+            Calendar(identifier: .gregorian).isDate($0.date, inSameDayAs: day.date)
+        }
+        return candidates.min { abs($0.date.timeIntervalSince(noon)) < abs($1.date.timeIntervalSince(noon)) }?.weatherCode
+    }
+
+    private func airQualityText(_ day: DailyForecast) -> String {
+        let hours = weather.airQuality.filter {
+            Calendar(identifier: .gregorian).isDate($0.key, inSameDayAs: day.date)
+        }
+        guard let peak = hours.values.compactMap({ $0.index }).max() else { return "—" }
+        return String(peak)
+    }
+
+    private func windText(_ day: DailyForecast) -> String {
+        let hours = weather.hourlyForecast.filter {
+            Calendar(identifier: .gregorian).isDate($0.date, inSameDayAs: day.date)
+        }
+        guard let peak = hours.map(\.wind?.speed).compactMap({ $0 }).max(by: { $0.inMetersPerSecond < $1.inMetersPerSecond })
+        else { return "—" }
+        return units.string(peak)
+    }
+
     private func minText(_ day: DailyForecast) -> String { units.degrees(day.temperatureMin) }
     private func maxText(_ day: DailyForecast) -> String { units.degrees(day.temperatureMax) }
 }
 
-/// The high/low range bar, scaled to the whole forecast rather than to the day.
 struct TemperatureBar: View {
     let day: DailyForecast
     let allDays: [DailyForecast]

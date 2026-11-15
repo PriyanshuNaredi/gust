@@ -41,6 +41,9 @@ public struct CurrentObservation: Hashable, Sendable {
     public let pressure: Pressure?
     public let cloudCover: Ratio?
     public let visibility: Distance?
+    /// The source's own day/night flag. Upstream calls this `isDaylight`; it decides
+    /// the header's background colour, so it is kept rather than recomputed.
+    public let isDay: Bool?
 
     public init(
         date: Date,
@@ -53,7 +56,8 @@ public struct CurrentObservation: Hashable, Sendable {
         dewPoint: Temperature? = nil,
         pressure: Pressure? = nil,
         cloudCover: Ratio? = nil,
-        visibility: Distance? = nil
+        visibility: Distance? = nil,
+        isDay: Bool? = nil
     ) {
         self.date = date
         self.weatherCode = weatherCode
@@ -66,5 +70,6 @@ public struct CurrentObservation: Hashable, Sendable {
         self.pressure = pressure
         self.cloudCover = cloudCover
         self.visibility = visibility
+        self.isDay = isDay
     }
 }

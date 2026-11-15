@@ -43,8 +43,12 @@ run_ui() {
          -destination "id=$SIM" -derivedDataPath "$DERIVED" 2>&1 ) || rc=$?
   local count
   count=$(printf "%s\n" "$out" | sed -n 's/.*Executed \([0-9][0-9]*\) tests.*/\1/p' | sort -rn | head -1)
-  if [ "$rc" -ne 0 ] || printf "%s\n" "$out" | grep -qE "error:|TEST FAILED"; then
-    printf "%s\n" "$out" | grep -E "error:|XCTAssert|TEST FAILED" | head -20
+  # Judge the run by xcodebuild's own verdict, not by grepping for "error:".
+  # XCTest logs a harmless "Failed to scroll to visible ... error: kAXErrorCannotComplete"
+  # line while falling back to a different tap, and a text filter reads that as a
+  # failure while the suite is green -- the same mistake as defect 18, one layer up.
+  if [ "$rc" -ne 0 ] || ! printf "%s\n" "$out" | grep -q "TEST SUCCEEDED"; then
+    printf "%s\n" "$out" | grep -E "XCTAssert|error:|Test Case.*failed" | head -20
     echo "FAIL: ui tests failed" >&2
     exit 1
   fi

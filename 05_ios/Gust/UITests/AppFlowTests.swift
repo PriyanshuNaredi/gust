@@ -53,8 +53,12 @@ final class AppFlowTests: XCTestCase {
         let app = launch()
         let header = app.staticTexts["header.temperature"]
         XCTAssertTrue(header.waitForExistence(timeout: 30))
-        // Celsius by default.
-        XCTAssertTrue(header.label.hasSuffix("°"))
+        // Fresh state, Celsius by default: the unit is a separate label beside the
+        // number, as upstream splits value and unit.
+        XCTAssertTrue(app.staticTexts["°C"].waitForExistence(timeout: 5))
+        let feelsLikeBefore = app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS 'feels like'")
+        ).firstMatch.label
 
         app.tabBars.buttons["Settings"].tap()
         let picker = anyElement(app, "settings.temperature")
@@ -64,14 +68,14 @@ final class AppFlowTests: XCTestCase {
 
         app.tabBars.buttons["Weather"].tap()
         XCTAssertTrue(header.waitForExistence(timeout: 15))
+        XCTAssertTrue(app.staticTexts["°F"].waitForExistence(timeout: 10), "unit beside the header did not follow the setting")
 
-        // "Feels like" renders through the preferences, so it carries the unit
-        // suffix the header omits; this is the assertion that proves the setting
-        // reached the main screen.
+        // "Feels like" also renders through the preferences. Its number must change
+        // with the unit even though it shows no unit suffix of its own.
         let feelsLike = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'feels like'")).firstMatch
         XCTAssertTrue(feelsLike.waitForExistence(timeout: 10), "feels-like line missing")
-        XCTAssertTrue(feelsLike.label.hasSuffix("°F"),
-                      "unit change did not reach the main screen: \(feelsLike.label)")
+        XCTAssertNotEqual(feelsLike.label, feelsLikeBefore,
+                          "feels-like value did not follow the unit change")
     }
 
     func testSearchFindsAPlaceAndAddsIt() {

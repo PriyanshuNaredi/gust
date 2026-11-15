@@ -16,6 +16,7 @@ import SwiftUI
 struct ForecastScreen: View {
     @Environment(AppState.self) private var appState
     @State private var store = ForecastStore()
+    @State private var showLocations = false
 
     /// Which cards the main screen shows, in Android's order. Adding a card here is
     /// the whole change — the layout rule decides its row.
@@ -28,6 +29,12 @@ struct ForecastScreen: View {
         .sun, .moon, .clock, .footer
     ]
 
+    /// Black on the pale day colours, white on the darkened night ones -- the same
+    /// rule the header text uses.
+    private var toolbarForeground: Color {
+        (loadedWeather?.isDaylight() ?? true) ? .black.opacity(0.86) : .white
+    }
+
     /// Kept so the navigation destination can render a detail page without
     /// re-reading the store's state inside the link.
     private var loadedWeather: Weather? {
@@ -37,6 +44,15 @@ struct ForecastScreen: View {
 
     var body: some View {
         NavigationStack {
+        ZStack {
+            // Upstream paints the weather colour behind the whole main screen, not
+            // just behind the header card -- the header is transparent on top of it.
+            if let weather = loadedWeather {
+                WeatherBackdropView(
+                    kind: WeatherBackdrop.kind(for: weather.current?.weatherCode ?? .cloudy),
+                    daylight: weather.isDaylight()
+                )
+            }
         ScrollView {
             VStack(spacing: 12) {
                 switch store.state {
@@ -63,7 +79,7 @@ struct ForecastScreen: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(.clear)
         .navigationDestination(for: MainCardKind.self) { kind in
             if let weather = loadedWeather {
                 DetailScreen(kind: kind, weather: weather, units: appState.units)
@@ -78,6 +94,56 @@ struct ForecastScreen: View {
             await store.reload()
         }
         .accessibilityIdentifier("forecast.screen")
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    showLocations = true
+                } label: {
+                    Image(systemName: "line.3.horizontal")
+                }
+                .tint(toolbarForeground)
+                .accessibilityLabel("Locations")
+                .accessibilityIdentifier("header.menu")
+            }
+            ToolbarItem(placement: .principal) {
+                // Explicit colour rather than toolbarColorScheme: the scheme is
+                // applied before the weather loads and stays black, which is unreadable
+                // on a night backdrop.
+                Text(store.place.name)
+                    .font(.headline)
+                    .foregroundStyle(toolbarForeground)
+                    .accessibilityIdentifier("header.place")
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button("Refresh", systemImage: "arrow.clockwise") {
+                        Task { await store.reload() }
+                    }
+                    Button("Edit place", systemImage: "pencil") {
+                        showLocations = true
+                    }
+                    NavigationLink("Settings", value: MainCardKind.header)
+                        .hidden()
+                } label: {
+                    Image(systemName: "ellipsis")
+                }
+                .tint(toolbarForeground)
+                .accessibilityLabel("More")
+                .accessibilityIdentifier("header.more")
+            }
+        }
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .sheet(isPresented: $showLocations) {
+            NavigationStack {
+                LocationsScreen()
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button("Done") { showLocations = false }
+                        }
+                    }
+            }
+        }
         }
     }
 

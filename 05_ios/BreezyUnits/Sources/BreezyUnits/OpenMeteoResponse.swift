@@ -49,9 +49,11 @@ public struct OpenMeteoCurrent: Decodable {
     public let pressureMsl: Double?
     public let cloudCover: Int?
     public let visibility: Double?
+    public let isDay: Int?
 
     enum CodingKeys: String, CodingKey {
         case time, interval, visibility
+        case isDay = "is_day"
         case temperature = "temperature_2m"
         case apparentTemperature = "apparent_temperature"
         case weatherCode = "weather_code"

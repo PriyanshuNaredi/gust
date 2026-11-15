@@ -39,6 +39,16 @@ final class AppState {
 
     init() {
         let defaults = UserDefaults.standard
+        // UI tests pass -resetState. Without this the tests inherit whatever the
+        // last manual run left behind, which is how a unit assertion passed in one
+        // order and failed in another.
+        if ProcessInfo.processInfo.arguments.contains("-resetState") {
+            defaults.removeObject(forKey: Self.preferencesKey)
+            defaults.removeObject(forKey: "gust.selectedPlace")
+            try? FileManager.default.removeItem(
+                at: Self.storageDirectory().appendingPathComponent(Self.placesFile)
+            )
+        }
         if let data = defaults.data(forKey: Self.preferencesKey),
            let decoded = try? JSONDecoder().decode(UnitPreferences.self, from: data) {
             units = decoded

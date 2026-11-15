@@ -34,10 +34,14 @@ final class ForecastUITests: XCTestCase {
         // mapped; a stuck loading state or an error view would not satisfy this.
         let temperature = app.staticTexts["header.temperature"]
         XCTAssertTrue(temperature.waitForExistence(timeout: 30), "forecast never loaded")
-        XCTAssertTrue(temperature.label.hasSuffix("°"), "unexpected temperature label: \(temperature.label)")
-        XCTAssertNotEqual(temperature.label, "—", "temperature missing from a loaded forecast")
+        // Upstream splits the value from its unit so the unit can be smaller; the
+        // value is a bare number and the unit lives beside it.
+        XCTAssertNotNil(Double(temperature.label), "unexpected temperature label: \(temperature.label)")
+        XCTAssertTrue(app.staticTexts["°C"].exists || app.staticTexts["°F"].exists, "no unit beside the temperature")
 
-        XCTAssertTrue(anyElement(app, "card.hourly").exists, "hourly card missing")
+        // The hourly card is a navigation link, and a link is one accessibility
+        // element: its inner identifier is not addressable, the link's is.
+        XCTAssertTrue(anyElement(app, "cardLink.hourly").exists, "hourly card missing")
         // The nowcast card is drawn with Canvas, not text, so its presence is the
         // only assertion that makes sense here.
         XCTAssertTrue(anyElement(app, "card.nowcast").exists, "nowcast card missing")

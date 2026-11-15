@@ -223,6 +223,18 @@ public struct Weather: Hashable, Sendable {
         return nearest.value
     }
 
+    /// Day or night at `date`, for the header's background colour. Prefers the
+    /// source's own flag, then today's sunrise/sunset, then assumes day: a wrong
+    /// "night" would paint the whole screen dark, a wrong "day" only makes it lighter.
+    public func isDaylight(at date: Date = Date()) -> Bool {
+        if let isDay = current?.isDay { return isDay }
+        if let today = dailyForecast.first,
+           let sunrise = today.sunrise, let sunset = today.sunset {
+            return date >= sunrise && date < sunset
+        }
+        return true
+    }
+
     /// Upstream's `isMinutelyForecastPrecipitationPossible`: any step with an
     /// intensity above zero. `nil` counts as no precipitation, as it does there.
     public var hasMinutelyPrecipitation: Bool {
