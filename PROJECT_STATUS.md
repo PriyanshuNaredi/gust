@@ -19,7 +19,7 @@ subset and `02_parity/PARITY_SPEC.md` for what exactly.
 | 3 | Parity spec | **signed off** (Option A + defaults) | `02_parity/PARITY_SPEC.md` |
 | 4 | Scaffolding | **done** — app builds, installs, launches, links the package; UI gate green | `05_ios/Gust/`, `07_logs/shots/shell-launch.png` |
 | 5 | Data layer | **done**: units, Open-Meteo request/response/mapping/client, hourly/daily/minutely models | 40 logic tests, 0 failures |
-| 6 | Main screen | **started**: card stack with the ported half/full rule; header, hourly, daily, 6 half cards | 5 UI tests, 0 failures |
+| 6 | Main screen | **in progress**: card stack with the ported half/full rule; header, hourly, daily, 7 half cards incl. air quality | 5 UI tests, 0 failures |
 | 6 | UI port | not started | — |
 | 7 | Custom rendering (charts) | not started | — |
 | 8 | Verification | not started | — |
@@ -60,6 +60,9 @@ on Android's `MeasureUnit`, so it belongs with the formatting layer, not the ari
 | Nowcast keeps one entry per step, nullable | `Minutely.precipitationIntensity` | `compactMap` slid the series 19 steps earlier (1632 → 1613). |
 | WMO 4, 50 and anything unmapped → no icon | `getWeatherCode` | Inventing a family for an unknown code shows the wrong weather. |
 | Half cards pair two per row; full cards own a row | `ViewType.isHalfSizeableBlock` | `LazyVGrid` stretches rows level; upstream rows are ragged. |
+| AQI = max over O3, NO2, PM10, PM25 only | `AirQuality.getIndex` | Maxing all six is right most days and wrong when CO or SO2 is extreme. |
+| AQI keeps going linearly above the last breakpoint | `PollutantIndex.getIndex` | A clamp looks safer and diverges on polluted days. |
+| Air quality is a separate host, 7 days, no models / no windspeed_unit | `OpenMeteoAirQualityApi` | Copying the forecast request returns nothing. |
 
 ## Bugs found in my own tooling (worth keeping)
 
