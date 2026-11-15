@@ -1,5 +1,7 @@
 # Gust
 
+[![Unsigned IPA](https://github.com/PriyanshuNaredi/gust/actions/workflows/unsigned-ipa.yml/badge.svg)](https://github.com/PriyanshuNaredi/gust/actions/workflows/unsigned-ipa.yml)
+
 An iOS port of [Breezy Weather](https://github.com/breezy-weather/breezy-weather) 6.2.2,
 built by reading the upstream Kotlin rather than guessing at behaviour.
 
