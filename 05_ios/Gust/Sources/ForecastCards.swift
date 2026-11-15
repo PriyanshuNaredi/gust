@@ -78,6 +78,17 @@ func symbolName(for code: WeatherCode?) -> String {
     }
 }
 
+/// The same families after dark. A sun icon at 23:00 is the kind of detail a user
+/// notices immediately: the panel says "Nighttime" and the picture disagrees.
+func nightSymbolName(for code: WeatherCode?) -> String {
+    switch code {
+    case .clear: return "moon.stars.fill"
+    case .partlyCloudy: return "cloud.moon.fill"
+    case .haze: return "moon.haze.fill"
+    default: return symbolName(for: code)
+    }
+}
+
 func familyLabel(_ code: WeatherCode?) -> String {
     switch code {
     case .clear: return "Clear"

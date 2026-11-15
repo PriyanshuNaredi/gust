@@ -46,6 +46,10 @@ final class AppFlowTests: XCTestCase {
 
         XCTAssertTrue(anyElement(app, "detail.screen").waitForExistence(timeout: 10), "detail page did not open")
         XCTAssertTrue(anyElement(app, "hourly.row.0").exists, "hourly detail has no rows")
+        // Upstream's detail header: a day selector and a day/night pair.
+        XCTAssertTrue(anyElement(app, "detail.day.0").exists, "detail day selector missing")
+        XCTAssertTrue(anyElement(app, "detail.daytime").exists, "daytime panel missing")
+        XCTAssertTrue(anyElement(app, "detail.nighttime").exists, "nighttime panel missing")
         XCTAssertTrue(app.navigationBars.buttons.firstMatch.exists, "no way back from the detail page")
     }
 

@@ -19,19 +19,77 @@ struct DetailScreen: View {
     let weather: Weather
     let units: UnitPreferences
 
+    /// Which forecast day the chart and the day/night panels describe. Upstream's
+    /// detail screen opens on "Today" and keeps the selector across pages.
+    @State private var selectedDay: Int = 0
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 header
+                daySelector
+                if kind == .hourly {
+                    DayNightPanel(weather: weather, day: selectedWeatherDay, units: units)
+                }
                 chart
                 values
             }
             .padding(16)
         }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                // Upstream's detail screen has one page per category and a menu to
+                // move between them. The cards are the entrance; this is the exit.
+                Menu {
+                    ForEach(MainCardKind.allCases.filter { $0.hasDetail }, id: \.self) { candidate in
+                        NavigationLink(candidate.detailTitle, value: candidate)
+                    }
+                } label: {
+                    Image(systemName: "square.grid.2x2")
+                }
+                .accessibilityLabel("Detail categories")
+                .accessibilityIdentifier("detail.categories")
+            }
+        }
         .navigationTitle(kind.detailTitle)
         .navigationBarTitleDisplayMode(.inline)
         .background(Color(.systemGroupedBackground))
         .accessibilityIdentifier("detail.screen")
+    }
+
+    private var selectedWeatherDay: DailyForecast? {
+        weather.dailyForecast.indices.contains(selectedDay) ? weather.dailyForecast[selectedDay] : nil
+    }
+
+    private var daySelector: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 18) {
+                ForEach(Array(weather.dailyForecast.prefix(7).enumerated()), id: \.offset) { index, day in
+                    Button {
+                        selectedDay = index
+                    } label: {
+                        VStack(spacing: 1) {
+                            Text(index == 0 ? "Today" : day.date.shortWeekday(in: weather.timeZone))
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            Text(String(Calendar(identifier: .gregorian).component(.day, from: day.date)))
+                                .font(.headline)
+                            Text(day.date.shortMonth(in: weather.timeZone))
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            Rectangle()
+                                .fill(selectedDay == index ? Color.accentColor : Color.clear)
+                                .frame(height: 2)
+                                .padding(.top, 2)
+                        }
+                        .foregroundStyle(selectedDay == index ? Color.accentColor : Color.primary)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("detail.day.\(index)")
+                }
+            }
+            .padding(.horizontal, 2)
+        }
     }
 
     private var header: some View {
@@ -74,6 +132,12 @@ struct DetailScreen: View {
         case .pollen: PollenValueList(weather: weather)
         default: MetricValueList(weather: weather, units: units, metric: kind)
         }
+    }
+}
+
+extension Date {
+    func shortMonth(in zone: TimeZone) -> String {
+        formatted(Date.FormatStyle(timeZone: zone).month(.abbreviated))
     }
 }
 
@@ -345,6 +409,69 @@ struct PollenChart: View {
             }
             .frame(height: 150)
             .accessibilityIdentifier("detail.pollenChart")
+        }
+    }
+}
+
+// MARK: - Day and night conditions
+
+/// Upstream's detail header: what the day and the night are like, side by side. The
+/// split is the same 05:00–17:00 boundary used by the precipitation card, so the two
+/// screens never disagree about which half a given hour belongs to.
+struct DayNightPanel: View {
+    let weather: Weather
+    let day: DailyForecast?
+    let units: UnitPreferences
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            column(
+                title: "Daytime",
+                hours: hours(period: .day),
+                identifier: "detail.daytime"
+            )
+            Divider()
+            column(
+                title: "Nighttime",
+                hours: hours(period: .night),
+                identifier: "detail.nighttime"
+            )
+        }
+        .frame(maxWidth: .infinity)
+        .padding(12)
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
+    }
+
+    private func column(title: String, hours: [HourlyForecast], identifier: String) -> some View {
+        let peak = hours.compactMap(\.temperature).max(by: { $0.inCelsius < $1.inCelsius })
+        let code = hours.compactMap(\.weatherCode).first
+        return VStack(alignment: .leading, spacing: 3) {
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(peak.map(units.degrees) ?? "—")
+                .font(.title3.weight(.semibold))
+            HStack(spacing: 4) {
+                Image(systemName: identifier.contains("night") ? nightSymbolName(for: code) : symbolName(for: code))
+                    .font(.caption)
+                Text(code.map(familyLabel) ?? "—")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityIdentifier(identifier)
+    }
+
+    /// Hours of the selected day inside the requested half.
+    private func hours(period: PrecipitationPeriod) -> [HourlyForecast] {
+        guard let day else { return [] }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = weather.timeZone
+        return weather.hourlyForecast.filter { hour in
+            guard calendar.isDate(hour.date, inSameDayAs: day.date) else { return false }
+            return PrecipitationSummary.period(forHour: calendar.component(.hour, from: hour.date)) == period
         }
     }
 }
