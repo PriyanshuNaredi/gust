@@ -90,9 +90,14 @@ recomputed ad hoc: `nextHourlyForecast`, `fullNextHourlyForecast`, `todayIndex`,
 Units are their own module (`weather-unit/`, 35 files) — `Temperature`, `Speed`, `Pressure`,
 `Distance`, `Duration`, `Ratio`, `Precipitation`, `PollutantConcentration`, `PollenConcentration`,
 each with a unit enum, a value type with conversion, formatting and decimal rules
-(`formatting/MeasureUnitFormatting.kt`, `UnitDecimals.kt`, `NumberFormatting.kt`). This module is
-**pure logic with existing tests** (`weather-unit/src/test/`), so it ports 1:1 into a Swift package
-with the same test cases — the cheapest parity in the whole project.
+(`formatting/MeasureUnitFormatting.kt`, `UnitDecimals.kt`, `NumberFormatting.kt`).
+
+**Correction (found while porting):** this module is *not* pure logic. It imports
+`android.content.Context`, `android.icu.util.MeasureUnit`, `androidx.annotation.RequiresApi`,
+`java.util.Locale` and the module's own `R` string table — the arithmetic is portable, the
+formatting is Android plumbing. The port therefore splits it: conversions and computing port 1:1
+(and carry upstream's numeric test expectations), while formatting is reimplemented behind our own
+protocol. `05_ios/BreezyUnits/` is that split, slice 1.
 
 ## 6. Settings subset
 
