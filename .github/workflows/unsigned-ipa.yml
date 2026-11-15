@@ -6,6 +6,11 @@ on:
     tags: ["v*"]
   workflow_dispatch:
 
+# The default token is read-only: the release step is a write, and without this the
+# tag build fails at the last step with "Resource not accessible by integration".
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: macos-15
