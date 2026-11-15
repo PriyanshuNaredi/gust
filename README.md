@@ -16,7 +16,7 @@ ships under its own name, its own icon, and ships LGPL-3.0 with the upstream not
 | Scope | Option A — see `SCOPE.md` |
 | Weather source | Open-Meteo (forecast + air quality + geocoding) |
 | Platform | iOS 17+, Swift 6 toolchain, Swift 5 language mode |
-| Tests | 118 package + 10 UI, all green |
+| Tests | 121 package + 10 UI, all green |
 | Licence | LGPL-3.0, plus upstream's additional terms — see `LICENSE`, `LICENSE_ADDITIONAL` |
 | Status | Feature-complete for its scope, not a finished product — `PROJECT_STATUS.md` lists exactly what is and is not done |
 
@@ -26,6 +26,9 @@ ships under its own name, its own icon, and ships LGPL-3.0 with the upstream not
   asset chosen by condition, day/night and theme, with its geometric scene over it
   (rotating sun squares, breathing cloud circles, rain streaks, snowflakes, hail, wind
   gusts, night stars, meteors, thunder flash), and the header
+- **Precipitation block** — the half of the day you are in (05:00/17:00), summed over
+  upstream's halves (06:00/18:00), and named after what is in it: "Daytime rain",
+  "Nighttime snow", "… precipitation"
 - **Precipitation nowcast** — upstream's chart: five-minute buckets, a three-tick time
   axis, the light/medium/heavy threshold lines with their stand-down rule, the
   "Precipitation soon / Expected to start at …" pair, and the bar colour from the rain

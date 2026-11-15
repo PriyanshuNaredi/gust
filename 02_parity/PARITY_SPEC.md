@@ -280,3 +280,32 @@ Two defects that only appeared once it was drawn:
 | 27 | Two-hour window, not the whole minutely series | Days of 15-minute steps would be one bucket per pixel |
 | 28 | The description sits above the chart instead of overlapping its top-left corner | Upstream's constraint puts `nowcasting_block_subtitle` on the chart's first row; at 14 pt over a bar chart the text is lost against the bars |
 | 29 | No drag marker (the "14:20–14:25: Light" bubble) | Upstream shows a `DefaultCartesianMarker` on touch. Worth doing, but it is an interaction, not a repaint: recorded here so it is not mistaken for done |
+
+## The precipitation block: two clocks, not one
+
+`PrecipitationViewHolder` decides *which half of the day* to describe with one pair of
+hours and sums the hours into that half with another:
+
+| Decision | Hours | Source |
+|---|---|---|
+| Which half is shown | 05:00–16:59 = day, everything else = night | `PrecipitationViewHolder.onBindView` |
+| Which hours are summed | 06:00–17:59 = day, 18:00–05:59 = night | `CommonConverter.getHourlyListByHalfDay` (it shifts each hour by six hours and calls anything before noon "day") |
+
+They disagree between 05:00–05:59 and 17:00–17:59. That is upstream's behaviour, and this
+port reproduces it rather than tidying it up.
+
+The port's own bug: it used the 05/17 split for *both* jobs, and resolved the night window
+forwards. At 03:00 it summed 17:00→05:00 of the day that was just beginning — hours that
+had not happened — found nothing, and rendered "—". The night window now belongs to the
+evening it starts in, so 03:00 shows the night that ended.
+
+| What | Ported value |
+|---|---|
+| Label | "Daytime rain" / "Nighttime snow" / "… precipitation"; rain and snow both present → "precipitation"; one of them present and equal to the total → its own word; equal to *less* than the total → "precipitation" (upstream compares with `==`) |
+| Value | The summed total of that half; upstream shows `-` when the source has no total for it |
+| Unit split | The value is formatted through the normal precipitation unit, so inches work |
+
+The rule worth copying: **when one card reads two different splits of the same data, port
+both of them.** Collapsing them to one makes the card disagree with the original for two
+hours a day, and only for two hours a day, which is the kind of difference a screenshot
+comparison taken at noon will never show.
