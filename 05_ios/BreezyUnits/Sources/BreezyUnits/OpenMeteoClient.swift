@@ -71,9 +71,12 @@ public struct OpenMeteoClient: Sendable {
     public func fetchAirQuality(
         latitude: Double,
         longitude: Double,
+        includePollen: Bool = false,
         baseURL: String = OpenMeteoAirQualityRequest.baseURL
     ) async throws -> OpenMeteoAirQualityResult {
-        let url = OpenMeteoAirQualityRequest.url(latitude: latitude, longitude: longitude, baseURL: baseURL)
+        let url = OpenMeteoAirQualityRequest.url(
+            latitude: latitude, longitude: longitude, includePollen: includePollen, baseURL: baseURL
+        )
         var request = URLRequest(url: url)
         request.timeoutInterval = 20
         request.setValue("application/json", forHTTPHeaderField: "Accept")

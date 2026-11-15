@@ -14,15 +14,15 @@ ships under its own name, its own icon, and ships LGPL-3.0 with the upstream not
 | Scope | Option A — see `SCOPE.md` |
 | Weather source | Open-Meteo (forecast + air quality + geocoding) |
 | Platform | iOS 17+, Swift 6 toolchain, Swift 5 language mode |
-| Tests | 75 package + 10 UI, all green |
+| Tests | 80 package + 10 UI, all green |
 | Licence | LGPL-3.0, plus upstream's additional terms |
 
 ## What it does
 
 - **Main screen** — the upstream card stack with its half/full layout rule: header,
   15-minute nowcast (Canvas), daily list with scaled range bars, hourly strip, then
-  precipitation, wind, air quality, humidity, UV, visibility, pressure, sun, moon and
-  local time, and the attribution footer.
+  precipitation, wind, air quality, pollen, humidity, UV, visibility, pressure, sun,
+  moon and local time, and the attribution footer.
 - **Detail pages** — hourly (temperature line over precipitation-probability bars),
   daily range bars, one series per metric card, four pollutant lines for air quality.
   Drawn with `Canvas`, as upstream draws them.

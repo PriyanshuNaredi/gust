@@ -159,3 +159,41 @@ struct AirQualityValueList: View {
         .accessibilityIdentifier("detail.airValues")
     }
 }
+
+
+struct PollenValueList: View {
+    let weather: Weather
+
+    var body: some View {
+        let entries = weather.pollen.sorted { $0.key < $1.key }.prefix(24)
+        if entries.isEmpty {
+            Text("No pollen forecast for this location.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        } else {
+            VStack(spacing: 0) {
+                ForEach(Array(entries.enumerated()), id: \.offset) { index, entry in
+                    HStack {
+                        Text(entry.key.localTime(in: weather.timeZone)).font(.footnote)
+                        Spacer()
+                        if let dominant = entry.value.dominant, dominant.value > 0 {
+                            Text(dominant.type.rawValue.capitalized)
+                                .font(.footnote.weight(.medium))
+                            Text(String(format: "%.0f", dominant.value))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .frame(width: 44, alignment: .trailing)
+                        } else {
+                            Text("none").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 5)
+                    .padding(.horizontal, 8)
+                    .background(index.isMultiple(of: 2) ? Color.clear : Color(.secondarySystemGroupedBackground))
+                }
+            }
+            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
+            .accessibilityIdentifier("detail.pollenValues")
+        }
+    }
+}

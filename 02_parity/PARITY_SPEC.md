@@ -175,3 +175,10 @@ per hour, so a 15-minute accumulation is multiplied by 3600/900 before compariso
 Ported exactly in these slices: the eight-name moon-phase vocabulary, the
 `max(O3, NO2, PM10, PM25)` index rule, Beaufort integer bands, the location's time zone applied to
 every displayed time, and the LGPL/notice obligations (bundled, reachable in Settings).
+
+## Deviation 19: pollen only inside CAMS's European domain
+
+Upstream gates pollen on `COPERNICUS_POLLEN_BBOX` (25° W–45° E, 30° N–72° N) and so does this
+port, for the same reason: outside that box the variables come back empty, and an empty pollen card
+reads as "no pollen" when the truth is "not covered". The card says "no coverage here" instead, and
+a test pins the box corners.

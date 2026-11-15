@@ -49,6 +49,7 @@ struct DetailScreen: View {
         case .hourly: return "Next 48 hours · \(weather.timeZone.identifier)"
         case .daily: return "\(weather.dailyForecast.count) days · \(weather.timeZone.identifier)"
         case .airQuality: return "Hourly · source Open-Meteo (CAMS)"
+        case .pollen: return "Hourly · CAMS European domain only"
         default: return "Hourly · source Open-Meteo"
         }
     }
@@ -59,6 +60,7 @@ struct DetailScreen: View {
         case .hourly: HourlyChart(weather: weather, units: units)
         case .daily: DailyChart(weather: weather, units: units)
         case .airQuality: AirQualityChart(weather: weather)
+        case .pollen: PollenChart(weather: weather)
         default: MetricChart(weather: weather, units: units, metric: kind)
         }
     }
@@ -69,6 +71,7 @@ struct DetailScreen: View {
         case .hourly: HourlyValueList(weather: weather, units: units)
         case .daily: DailyValueList(weather: weather, units: units)
         case .airQuality: AirQualityValueList(weather: weather)
+        case .pollen: PollenValueList(weather: weather)
         default: MetricValueList(weather: weather, units: units, metric: kind)
         }
     }
@@ -295,6 +298,53 @@ struct AirQualityChart: View {
                     Text(name).font(.caption2).foregroundStyle(.secondary)
                 }
             }
+        }
+    }
+}
+
+
+// MARK: - Pollen
+
+struct PollenChart: View {
+    let weather: Weather
+
+    var body: some View {
+        let ordered = weather.pollen.sorted { $0.key < $1.key }
+        if ordered.isEmpty {
+            // Not a chart with no data: a statement that this place is outside the
+            // covered area, which is a different fact.
+            Text("Pollen data covers Europe only. This place is outside the CAMS domain.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("detail.pollenNoCoverage")
+        } else {
+            Canvas { context, size in
+                let types: [(PollenType, Color)] = [
+                    (.alder, .brown), (.birch, .green), (.grass, .teal), (.ragweed, .orange)
+                ]
+                let peak = max(
+                    ordered.flatMap { entry in types.compactMap { entry.value.value(of: $0.0) } }.max() ?? 1,
+                    1
+                )
+                for (type, color) in types {
+                    let values = ordered.compactMap { $0.value.value(of: type) }
+                    guard values.count > 1 else { continue }
+                    var path = Path()
+                    for (index, value) in values.enumerated() {
+                        let x = size.width * CGFloat(index) / CGFloat(values.count - 1)
+                        let y = size.height - size.height * CGFloat(value / peak) * 0.92
+                        if index == 0 { path.move(to: CGPoint(x: x, y: y)) } else { path.addLine(to: CGPoint(x: x, y: y)) }
+                    }
+                    context.stroke(path, with: .color(color), lineWidth: 1.5)
+                }
+                context.draw(
+                    Text(String(format: "%.0f grains/m³", peak)).font(.caption2).foregroundStyle(.secondary),
+                    at: CGPoint(x: 60, y: 10)
+                )
+            }
+            .frame(height: 150)
+            .accessibilityIdentifier("detail.pollenChart")
         }
     }
 }

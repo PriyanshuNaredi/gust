@@ -24,7 +24,7 @@ struct ForecastScreen: View {
         // DAILY, HOURLY, then the half-size cards. Daily before hourly is not a
         // mistake here -- it is what the Android main screen does.
         .header, .precipitationNowcast, .daily, .hourly,
-        .precipitation, .wind, .airQuality, .humidity, .uv, .visibility, .pressure,
+        .precipitation, .wind, .airQuality, .pollen, .humidity, .uv, .visibility, .pressure,
         .sun, .moon, .clock, .footer
     ]
 
@@ -127,6 +127,7 @@ struct ForecastScreen: View {
         case .hourly: HourlyCard(weather: weather, units: appState.units)
         case .daily: DailyCard(weather: weather, units: appState.units)
         case .airQuality: MetricHalfCard(title: "Air quality", icon: "aqi.medium", lines: airQualityLines(weather))
+        case .pollen: MetricHalfCard(title: "Pollen", icon: "leaf", lines: pollenLines(weather))
         case .wind: MetricHalfCard(title: "Wind", icon: "wind", lines: windLines(weather))
         case .humidity: MetricHalfCard(title: "Humidity", icon: "humidity", lines: humidityLines(weather))
         case .pressure: MetricHalfCard(title: "Pressure", icon: "gauge", lines: pressureLines(weather))
@@ -164,6 +165,22 @@ struct ForecastScreen: View {
             lines.append(String(format: "PM2.5 %.1f", pm25.microgramsPerCubicMeter))
         }
         return lines
+    }
+
+    private func pollenLines(_ weather: Weather) -> [String] {
+        guard !weather.pollen.isEmpty else {
+            // Say why it is empty: outside CAMS's domain there is no data at all,
+            // which is not the same as clean air.
+            return ["—", "no coverage here"]
+        }
+        guard let pollen = weather.pollen(near: weather.current?.date ?? Date()) else { return ["—"] }
+        guard let dominant = pollen.dominant, dominant.value > 0 else {
+            return ["0", "none detected"]
+        }
+        return [
+            String(format: "%.0f", dominant.value),
+            dominant.type.rawValue.capitalized
+        ]
     }
 
     private func humidityLines(_ weather: Weather) -> [String] {

@@ -54,17 +54,22 @@ final class ForecastStore {
             )
             // Air quality is a separate endpoint: its failure must not take the
             // forecast down, so it is best-effort and defaults to absent.
+            // Pollen variables exist only over the CAMS European domain; asking
+            // outside it returns nothing and would read as "no pollen today".
+            let wantsPollen = PollenCoverage.covers(latitude: place.latitude, longitude: place.longitude)
             async let airResult: OpenMeteoAirQualityResult? = {
                 do {
                     return try await client.fetchAirQuality(
-                        latitude: place.latitude, longitude: place.longitude
+                        latitude: place.latitude, longitude: place.longitude, includePollen: wantsPollen
                     )
                 }
                 catch { return nil }
             }()
 
             let result = try await weatherResult
-            let air = OpenMeteoMapping.airQualityByDate(from: (try? await airResult)?.hourly)
+            let payload = try? await airResult
+            let air = OpenMeteoMapping.airQualityByDate(from: payload?.hourly)
+            let pollen = wantsPollen ? OpenMeteoMapping.pollenByDate(from: payload?.hourly) : [:]
             var weather = OpenMeteoMapping.weather(from: result)
             // A "loaded" state with nothing in it would show an empty card stack and
             // look like a rendering bug, so treat it as a failure instead.
@@ -78,6 +83,7 @@ final class ForecastStore {
                 dailyForecast: weather.dailyForecast,
                 minutelyForecast: weather.minutelyForecast,
                 airQuality: air,
+                pollen: pollen,
                 timeZone: weather.timeZone,
                 refreshTime: weather.refreshTime
             )

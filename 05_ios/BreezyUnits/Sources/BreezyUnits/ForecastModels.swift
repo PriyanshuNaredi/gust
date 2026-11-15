@@ -176,6 +176,8 @@ public struct Weather: Hashable, Sendable {
     /// rather than inside it, because it comes from a different endpoint and may be
     /// missing while the forecast is fine.
     public let airQuality: [Date: AirQuality]
+    /// Pollen, only inside CAMS's European domain; empty elsewhere.
+    public let pollen: [Date: Pollen]
     /// The location's time zone, as the source reports it. Every time shown in the
     /// UI must be formatted in *this* zone: formatting in the device's zone makes a
     /// Berlin sunrise read as 1:26 AM on a phone set to Pacific time.
@@ -189,6 +191,7 @@ public struct Weather: Hashable, Sendable {
         dailyForecast: [DailyForecast],
         minutelyForecast: [MinutelyForecast],
         airQuality: [Date: AirQuality] = [:],
+        pollen: [Date: Pollen] = [:],
         timeZone: TimeZone = .current,
         refreshTime: Date
     ) {
@@ -197,6 +200,7 @@ public struct Weather: Hashable, Sendable {
         self.dailyForecast = dailyForecast
         self.minutelyForecast = minutelyForecast
         self.airQuality = airQuality
+        self.pollen = pollen
         self.timeZone = timeZone
         self.refreshTime = refreshTime
     }
@@ -207,6 +211,14 @@ public struct Weather: Hashable, Sendable {
     public func airQuality(near date: Date) -> AirQuality? {
         if let exact = airQuality[date] { return exact }
         let nearest = airQuality.min { abs($0.key.timeIntervalSince(date)) < abs($1.key.timeIntervalSince(date)) }
+        guard let nearest, abs(nearest.key.timeIntervalSince(date)) <= 3600 else { return nil }
+        return nearest.value
+    }
+
+    /// Nearest pollen hour, within the hour, like `airQuality(near:)`.
+    public func pollen(near date: Date) -> Pollen? {
+        if let exact = pollen[date] { return exact }
+        let nearest = pollen.min { abs($0.key.timeIntervalSince(date)) < abs($1.key.timeIntervalSince(date)) }
         guard let nearest, abs(nearest.key.timeIntervalSince(date)) <= 3600 else { return nil }
         return nearest.value
     }

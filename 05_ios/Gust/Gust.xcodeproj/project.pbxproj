@@ -12,6 +12,7 @@
 		30E2FDE520F16949BBC5F4D5 /* GustApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7211111497C2E2478DB2330B /* GustApp.swift */; };
 		3CD188A2217E83D971121F33 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 48ADB1C4591F62E4DFB9F7CA /* Assets.xcassets */; };
 		5BA32F1C619D8B4F8A41F650 /* BREEZY_LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = D18A7EA90E450EA31C4F811E /* BREEZY_LICENSE.txt */; };
+		68739601EC7D959F03FB3C46 /* ZZShot.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB4C10A37018BA04B6ADC09F /* ZZShot.swift */; };
 		899977ED4324CD0C0919F3FC /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167DBBB7AE572785A91FDC45 /* AppState.swift */; };
 		8E17EC75715EAF972661D85F /* NOTICE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 515FA00054C6977994B196F6 /* NOTICE.txt */; };
 		95AEBF81116FDEE2DC934B5A /* ForecastUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B06D370F365930430E8F62EA /* ForecastUITests.swift */; };
@@ -57,6 +58,7 @@
 		C82242CC74C70825C96A0760 /* DetailValues.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailValues.swift; sourceTree = "<group>"; };
 		D18A7EA90E450EA31C4F811E /* BREEZY_LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = BREEZY_LICENSE.txt; sourceTree = "<group>"; };
 		D447A69753A81ADB5F8F2B0C /* LicencesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicencesScreen.swift; sourceTree = "<group>"; };
+		DB4C10A37018BA04B6ADC09F /* ZZShot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZZShot.swift; sourceTree = "<group>"; };
 		DBC5832EC5C150F583C8EDB6 /* GustUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GustUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		EA884193C5554F0D80196BB1 /* Gust.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Gust.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F6CBDFE6BEACFE9B841AF4B2 /* LocationsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationsScreen.swift; sourceTree = "<group>"; };
@@ -117,6 +119,7 @@
 				B06D370F365930430E8F62EA /* ForecastUITests.swift */,
 				6FC2C95849ECCC53FD8DEDE9 /* LocalTimeTests.swift */,
 				5A3973CD73E2C09C85540D58 /* ShellTests.swift */,
+				DB4C10A37018BA04B6ADC09F /* ZZShot.swift */,
 			);
 			path = UITests;
 			sourceTree = "<group>";
@@ -272,6 +275,7 @@
 				95AEBF81116FDEE2DC934B5A /* ForecastUITests.swift in Sources */,
 				AC6D9683DE5E6F122400C653 /* LocalTimeTests.swift in Sources */,
 				A6E1F48EFC1D5769023108FC /* ShellTests.swift in Sources */,
+				68739601EC7D959F03FB3C46 /* ZZShot.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
